@@ -1,3 +1,6 @@
+// Set env BEFORE importing api
+process.env.EXPO_PUBLIC_API_URL = 'https://api.example.com';
+
 import * as fc from 'fast-check';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -16,7 +19,6 @@ jest.mock('./auth', () => ({
 // Mock global fetch
 const mockFetch = jest.fn();
 (globalThis as any).fetch = mockFetch;
-process.env.EXPO_PUBLIC_API_URL = 'https://api.example.com';
 
 import { apiRequest } from './api';
 

@@ -70,6 +70,22 @@ describe('RecommendationService', () => {
       actual_duration_seconds: 55,
     };
 
+    const mockProtocol = { id: 'proto-1', name: 'Test' };
+
+    beforeEach(() => {
+      // logIntervention now validates protocol exists before creating the log
+      (prisma.protocol.findUnique as jest.Mock).mockResolvedValue(mockProtocol);
+    });
+
+    it('should return 404 when protocol_id does not exist', async () => {
+      (prisma.protocol.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.logIntervention(userId, dto)).rejects.toThrow(
+        'Protocol with id "proto-1" not found',
+      );
+      expect(prisma.interventionLog.create).not.toHaveBeenCalled();
+    });
+
     it('should create intervention log on optimistic path (user exists)', async () => {
       const mockLog = { id: 'log-1', ...dto, user_id: userId, created_at: new Date() };
       (prisma.interventionLog.create as jest.Mock).mockResolvedValue(mockLog);

@@ -29,10 +29,14 @@ export interface ProtocolState {
 export interface SessionState {
   phase: SessionPhase;
   elapsedSeconds: number;
+  durationSeconds: number;
   completedFully: boolean;
+  triggerContext: string | null;
   setPhase: (phase: SessionPhase) => void;
+  setDuration: (duration: number) => void;
   tick: () => void;
   complete: () => void;
   skip: () => void;
   reset: () => void;
+  setTriggerContext: (value: string) => void;
 }

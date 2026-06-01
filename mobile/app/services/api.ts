@@ -1,7 +1,10 @@
 import { useAuthStore } from '../store/useAuthStore';
 import { signInAnonymously } from './auth';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL!;
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+if (!API_BASE_URL) {
+  throw new Error('EXPO_PUBLIC_API_URL environment variable is not set');
+}
 
 interface RequestOptions {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';

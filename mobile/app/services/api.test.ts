@@ -1,3 +1,6 @@
+// Set env BEFORE importing api (module-level validation throws without it)
+process.env.EXPO_PUBLIC_API_URL = 'https://api.example.com';
+
 import { apiRequest, api } from './api';
 import { useAuthStore } from '../store/useAuthStore';
 

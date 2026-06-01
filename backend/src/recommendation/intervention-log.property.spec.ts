@@ -3,21 +3,21 @@ import { RecommendationService } from './recommendation.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 /**
- * Property 5: Intervention log persistence round-trip
+ * Property 5: Intervention log creation contract (unit-level, mocked DB)
  *
- * For any valid combination of protocol_id, trigger_context, feedback_result,
- * completed_fully, actual_duration_seconds, creating a log and reading it back
- * produces matching field values with non-null id and created_at.
+ * Verifies that for any valid input combination, the service correctly passes
+ * data to Prisma and returns a record with matching fields plus generated id/created_at.
+ * NOTE: This does NOT test actual database persistence — that requires a real test DB.
  *
  * **Validates: Requirements 3.1**
  */
-describe('Property 5: Intervention log persistence round-trip', () => {
+describe('Property 5: Intervention log creation contract (mocked)', () => {
   let service: RecommendationService;
   let prisma: any;
 
   beforeEach(() => {
     prisma = {
-      protocol: { findUnique: jest.fn() },
+      protocol: { findUnique: jest.fn().mockResolvedValue({ id: 'exists', name: 'Test' }) },
       interventionLog: { create: jest.fn() },
       user: { upsert: jest.fn() },
     };

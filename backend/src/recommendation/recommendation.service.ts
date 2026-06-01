@@ -28,6 +28,16 @@ export class RecommendationService {
     userId: string,
     dto: LogRequestDto,
   ): Promise<InterventionLog> {
+    // Validate protocol exists before attempting to create log
+    const protocol = await this.prisma.protocol.findUnique({
+      where: { id: dto.protocol_id },
+    });
+    if (!protocol) {
+      throw new NotFoundException(
+        `Protocol with id "${dto.protocol_id}" not found`,
+      );
+    }
+
     const data = {
       user_id: userId,
       protocol_id: dto.protocol_id,

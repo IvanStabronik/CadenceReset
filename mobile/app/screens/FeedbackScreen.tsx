@@ -24,6 +24,7 @@ export default function FeedbackScreen() {
   const clearProtocol = useProtocolStore((state) => state.clearProtocol);
   const elapsedSeconds = useSessionStore((state) => state.elapsedSeconds);
   const completedFully = useSessionStore((state) => state.completedFully);
+  const triggerContext = useSessionStore((state) => state.triggerContext);
   const reset = useSessionStore((state) => state.reset);
 
   const handleFeedback = async (feedbackResult: FeedbackResult) => {
@@ -31,13 +32,18 @@ export default function FeedbackScreen() {
     setSubmitting(true);
 
     try {
-      await api.post('/log', {
-        protocol_id: protocol?.id,
-        trigger_context: 'user_session',
-        feedback_result: feedbackResult,
-        completed_fully: completedFully,
-        actual_duration_seconds: elapsedSeconds,
-      });
+      // Guard: don't send /log if required data is missing
+      if (protocol && triggerContext) {
+        await api.post('/log', {
+          protocol_id: protocol.id,
+          trigger_context: triggerContext,
+          feedback_result: feedbackResult,
+          completed_fully: completedFully,
+          actual_duration_seconds: elapsedSeconds,
+        });
+      } else {
+        console.warn('Missing protocol or triggerContext — skipping log');
+      }
     } catch (err) {
       // Log error but don't block user — still dismiss
       console.error('Failed to log intervention:', err);

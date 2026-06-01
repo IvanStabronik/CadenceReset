@@ -27,6 +27,7 @@ export default function HomeScreen() {
 
   const setProtocol = useProtocolStore((state) => state.setProtocol);
   const setPhase = useSessionStore((state) => state.setPhase);
+  const setTriggerCtx = useSessionStore((state) => state.setTriggerContext);
 
   const handleSubmit = async () => {
     if (!triggerContext.trim()) {
@@ -43,6 +44,7 @@ export default function HomeScreen() {
       });
 
       setProtocol(protocol);
+      setTriggerCtx(triggerContext.trim());
       setPhase('preparation');
       navigation.navigate('InterventionFlow');
     } catch (err: any) {

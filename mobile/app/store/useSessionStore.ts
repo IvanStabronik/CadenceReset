@@ -6,22 +6,32 @@ const PHASE_ORDER: SessionPhase[] = ['idle', 'preparation', 'execution', 'feedba
 export const useSessionStore = create<SessionState>((set) => ({
   phase: 'idle',
   elapsedSeconds: 0,
+  durationSeconds: 0,
   completedFully: false,
+  triggerContext: null,
 
   setPhase: (phase: SessionPhase) => {
     set((state) => {
       const currentIndex = PHASE_ORDER.indexOf(state.phase);
       const nextIndex = PHASE_ORDER.indexOf(phase);
-      // Allow only sequential transitions (next phase) or reset to idle from feedback
       if (nextIndex === currentIndex + 1 || (state.phase === 'feedback' && phase === 'idle')) {
         return { phase };
       }
-      return state; // Reject invalid transitions
+      return state;
     });
   },
 
+  setDuration: (duration: number) => {
+    set({ durationSeconds: duration });
+  },
+
   tick: () => {
-    set((state) => ({ elapsedSeconds: state.elapsedSeconds + 1 }));
+    set((state) => {
+      if (state.durationSeconds > 0 && state.elapsedSeconds >= state.durationSeconds) {
+        return state; // Clamped — don't exceed duration
+      }
+      return { elapsedSeconds: state.elapsedSeconds + 1 };
+    });
   },
 
   complete: () => {
@@ -33,6 +43,10 @@ export const useSessionStore = create<SessionState>((set) => ({
   },
 
   reset: () => {
-    set({ phase: 'idle', elapsedSeconds: 0, completedFully: false });
+    set({ phase: 'idle', elapsedSeconds: 0, durationSeconds: 0, completedFully: false, triggerContext: null });
+  },
+
+  setTriggerContext: (value: string) => {
+    set({ triggerContext: value });
   },
 }));

@@ -16,10 +16,16 @@ export default function ExecutionScreen() {
   const phase = useSessionStore((state) => state.phase);
   const complete = useSessionStore((state) => state.complete);
   const skip = useSessionStore((state) => state.skip);
+  const setDuration = useSessionStore((state) => state.setDuration);
   const elapsedSeconds = useSessionStore((state) => state.elapsedSeconds);
   const protocol = useProtocolStore((state) => state.protocol);
 
   const duration = protocol?.duration_seconds ?? 60;
+
+  // Set duration in store so tick() can clamp
+  useEffect(() => {
+    setDuration(duration);
+  }, [duration, setDuration]);
 
   const handleComplete = useCallback(() => {
     complete();

@@ -7,7 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { PrismaExceptionFilter } from '../common/filters/prisma-exception.filter';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-describe('App E2E Integration Tests', () => {
+describe('Controller Integration Tests (mocked DB — verifies HTTP flow, validation, guards)', () => {
   let app: INestApplication;
   let prisma: Record<string, any>;
 

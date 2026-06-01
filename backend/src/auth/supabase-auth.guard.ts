@@ -38,6 +38,11 @@ export class SupabaseAuthGuard implements CanActivate {
         throw new UnauthorizedException('Invalid token role');
       }
 
+      // Validate sub claim exists and is a UUID
+      if (!decoded.sub || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decoded.sub)) {
+        throw new UnauthorizedException('Invalid or missing user identity in token');
+      }
+
       // Attach user ID (sub claim) to request
       request.user = decoded.sub;
 

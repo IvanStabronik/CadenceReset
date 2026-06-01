@@ -9,9 +9,14 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
+    "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
+    "test:cov": "jest --coverage",
+    "test:e2e": "jest --testRegex '.*\\.e2e\\.spec\\.ts$'",
+    "prisma:generate": "prisma generate",
+    "prisma:seed": "prisma db seed",
+    "prisma:push": "prisma db push"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
