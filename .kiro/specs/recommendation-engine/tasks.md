@@ -133,7 +133,7 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - **Validates: Requirements 6.3**
     - _Requirements: 6.3_
 
-- [-] 6. Implement RecommendationService
+- [x] 6. Implement RecommendationService
   - [x] 6.1 Create RecommendationService with matchProtocol method
     - Create `src/recommendation/recommendation.service.ts`
     - Inject PrismaService
@@ -157,15 +157,15 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Mock PrismaService for all tests
     - _Requirements: 3.1, 3.3, 3.4, 3.7, 4.5_
 
-  - [ ] 6.4 Write property test for intervention log persistence (Property 5)
+  - [x] 6.4 Write property test for intervention log persistence (Property 5)
     - **Property 5: Intervention log persistence round-trip** — For any valid combination of protocol_id, trigger_context, feedback_result, completed_fully, actual_duration_seconds, creating a log and reading it back produces matching field values with non-null id and created_at
     - Requires test database with seeded protocols
     - Use fast-check to generate valid log inputs
     - **Validates: Requirements 3.1**
     - _Requirements: 3.1_
 
-- [ ] 7. Implement RecommendationController and wire module
-  - [ ] 7.1 Create RecommendationController
+- [x] 7. Implement RecommendationController and wire module
+  - [x] 7.1 Create RecommendationController
     - Create `src/recommendation/recommendation.controller.ts`
     - Apply `@UseGuards(SupabaseAuthGuard)` at class level
     - `@Post('recommendation/match')` → delegates to `service.matchProtocol(dto.trigger_context)`
@@ -173,14 +173,14 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Controller contains NO business logic or direct DB access
     - _Requirements: 2.1, 2.7, 3.1, 3.8, 4.2, 4.3_
 
-  - [ ] 7.2 Create RecommendationModule and AppModule
+  - [x] 7.2 Create RecommendationModule and AppModule
     - Create `src/recommendation/recommendation.module.ts` importing PrismaModule, providing RecommendationService and RecommendationController
     - Create/update `src/app.module.ts` importing ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, RecommendationModule
     - Apply global ValidationPipe in `main.ts` with `whitelist: true`, `transform: true`
     - _Requirements: 4.3, 4.8_
 
-- [ ] 8. Implement PrismaExceptionFilter
-  - [ ] 8.1 Create PrismaExceptionFilter
+- [x] 8. Implement PrismaExceptionFilter
+  - [x] 8.1 Create PrismaExceptionFilter
     - Create `src/common/filters/prisma-exception.filter.ts`
     - Catch `PrismaClientKnownRequestError` and `PrismaClientInitializationError`
     - Map P2002 (unique constraint) → 409 Conflict
@@ -190,14 +190,14 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Register as global filter in `main.ts`
     - _Requirements: 3.7_
 
-- [ ] 9. Checkpoint — Backend compilation and tests
+- [x] 9. Checkpoint — Backend compilation and tests
   - Ensure backend compiles without errors (`npx tsc --noEmit`)
   - Ensure all backend unit tests pass (`npx jest`)
   - Ensure all property tests (Properties 1–8) pass
   - Ask the user if questions arise.
 
-- [ ] 10. Backend integration tests
-  - [ ] 10.1 Write integration tests for full endpoint flow
+- [x] 10. Backend integration tests
+  - [x] 10.1 Write integration tests for full endpoint flow
     - Test authenticated POST /recommendation/match → 200 with correct protocol
     - Test authenticated POST /log → 201 with persisted record
     - Test missing auth → 401
@@ -208,7 +208,7 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Set up test database utilities (setup/teardown)
     - _Requirements: 1.4, 1.5, 1.7, 2.1, 2.7, 3.1, 3.8, 6.1, 6.2, 6.6_
 
-- [-] 11. Frontend project setup and configuration
+- [x] 11. Frontend project setup and configuration
   - [x] 11.1 Scaffold directory structure in existing mobile/ project
     - Navigate to the existing `mobile/` project (already created in Task 0.2 — do NOT re-run `npx create-expo-app`)
     - Verify `tsconfig.json` has strict mode enabled
@@ -312,8 +312,8 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - User must explicitly tap "Skip" or complete the timer to leave Execution
     - _Requirements: 7.5_
 
-- [ ] 16. Screens implementation
-  - [ ] 16.1 Implement HomeScreen
+- [x] 16. Screens implementation
+  - [x] 16.1 Implement HomeScreen
     - Create `app/screens/HomeScreen.tsx`
     - Render TextInput for trigger_context with maxLength=500 and visible character counter
     - Render submit button
@@ -322,13 +322,13 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - On error (4xx/5xx): display inline error message without navigating away
     - _Requirements: 7.1, 7.2, 7.3, 7.7_
 
-  - [ ] 16.2 Implement PreparationScreen
+  - [x] 16.2 Implement PreparationScreen
     - Create `app/screens/PreparationScreen.tsx`
     - Display protocol name, duration_seconds (formatted), and instruction_text from useProtocolStore
     - Render "Begin" button that transitions session phase to 'execution' and navigates to ExecutionScreen
     - _Requirements: 7.4_
 
-  - [ ] 16.3 Implement ExecutionScreen with Reanimated animations and useTimer hook
+  - [x] 16.3 Implement ExecutionScreen with Reanimated animations and useTimer hook
     - Create `app/hooks/useTimer.ts` — countdown hook from duration_seconds, decrements every 1s, calls useSessionStore.tick() each second
     - Create `app/screens/ExecutionScreen.tsx`
     - Render countdown timer display (remaining seconds)
@@ -342,7 +342,7 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Implement AppState listener: calculate time delta on resume, update elapsedSeconds, snap shared values
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7_
 
-  - [ ] 16.4 Implement FeedbackScreen
+  - [x] 16.4 Implement FeedbackScreen
     - Create `app/screens/FeedbackScreen.tsx`
     - Render three outcome buttons: "Better", "No Change", "Worse"
     - On selection: send POST /log with protocol_id, trigger_context, feedback_result, completed_fully, actual_duration_seconds
@@ -350,7 +350,7 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - On failure: log error but still dismiss (do not block user)
     - _Requirements: 7.6_
 
-  - [ ] 16.5 Wire App.tsx with navigation container and auth initialization
+  - [x] 16.5 Wire App.tsx with navigation container and auth initialization
     - Create/update `app/App.tsx` as root component
     - Wrap with NavigationContainer
     - On mount: call restoreToken() → if no token, trigger anonymous sign-in
@@ -358,22 +358,22 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Render RootNavigator once authenticated
     - _Requirements: 9.1, 9.2, 9.3_
 
-- [ ] 17. Frontend tests (Properties 9–12 and unit/component tests)
-  - [ ] 17.1 Write property test for session phase transitions (Property 9)
+- [x] 17. Frontend tests (Properties 9–12 and unit/component tests)
+  - [x] 17.1 Write property test for session phase transitions (Property 9)
     - **Property 9: Session phase transitions are sequential** — For any intervention session, phase transitions only in order: idle→preparation→execution→feedback→idle. No phase is skipped or revisited.
     - Test that calling setPhase with out-of-order values is rejected or ignored
     - Use fast-check to generate random action sequences and verify phase invariant
     - **Validates: Requirements 7.4, 7.5, 8.5**
     - _Requirements: 7.4, 7.5, 8.5_
 
-  - [ ] 17.2 Write property test for timer bounds (Property 10)
+  - [x] 17.2 Write property test for timer bounds (Property 10)
     - **Property 10: Timer elapsed never exceeds protocol duration** — For any protocol with duration_seconds=D, session.elapsedSeconds never exceeds D. When elapsed reaches D, session transitions to 'feedback' with completedFully=true.
     - Use fast-check to generate durations (1–3600) and simulate tick sequences
     - Verify elapsedSeconds is clamped at D and complete() is triggered
     - **Validates: Requirements 10.1, 10.5**
     - _Requirements: 10.1, 10.5_
 
-  - [ ] 17.3 Write property test for auth token presence (Property 11)
+  - [x] 17.3 Write property test for auth token presence (Property 11)
     - **Property 11: Auth token is always present on API requests** — For any HTTP request sent to the backend, the Authorization header contains a Bearer token from the Zustand auth store. If no token is available, the request is not sent.
     - Mock the API service, generate random request payloads
     - Verify every outgoing request has Authorization header with valid Bearer format
@@ -381,14 +381,14 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - **Validates: Requirements 9.4, 9.5**
     - _Requirements: 9.4, 9.5_
 
-  - [ ] 17.4 Write property test for secure storage exclusivity (Property 12)
+  - [x] 17.4 Write property test for secure storage exclusivity (Property 12)
     - **Property 12: Secure storage exclusivity for JWT** — For any app session, the JWT token exists in exactly one persistent storage location: expo-secure-store. The token is never written to AsyncStorage or any unencrypted mechanism.
     - Mock storage adapters, verify only secureStorage.setItem is called for token persistence
     - Verify AsyncStorage is never invoked for token-related keys
     - **Validates: Requirements 9.6, 9.7**
     - _Requirements: 9.6, 9.7_
 
-  - [ ] 17.5 Write unit tests for Zustand stores and hooks
+  - [x] 17.5 Write unit tests for Zustand stores and hooks
     - Test useAuthStore: login() sets token+userId+isAuthenticated; logout() clears all; restoreToken() hydrates from secure storage
     - Test useProtocolStore: setProtocol() stores protocol; clearProtocol() resets to null
     - Test useSessionStore: setPhase() updates phase; tick() increments elapsed; complete() sets completedFully; skip() records partial
@@ -396,14 +396,14 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Test background tracking: calculates correct elapsed delta on foreground resume
     - _Requirements: 8.1–8.7, 10.1, 10.3, 10.4_
 
-  - [ ] 17.6 Write unit tests for API interceptor
+  - [x] 17.6 Write unit tests for API interceptor
     - Test that Bearer token is attached to all requests
     - Test 401 response triggers re-auth and single retry
     - Test retry failure propagates error
     - Test request is blocked when no token available
     - _Requirements: 9.4, 9.5_
 
-  - [ ] 17.7 Write component tests for screens
+  - [x] 17.7 Write component tests for screens
     - HomeScreen: renders input, character counter, submit button; shows error on API failure
     - PreparationScreen: displays protocol name, duration, instruction text
     - ExecutionScreen: shows timer, skip button; verify timer decrements
@@ -411,7 +411,7 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Use React Native Testing Library with mocked stores and navigation
     - _Requirements: 7.1–7.7, 10.1–10.6_
 
-- [ ] 18. Final full-stack checkpoint
+- [x] 18. Final full-stack checkpoint
   - Ensure backend compiles without errors and all backend tests pass (unit + property + integration)
   - Ensure mobile app compiles without errors on both iOS and Android (`npx expo start`)
   - Ensure all frontend tests pass (property tests Properties 9–12, unit tests, component tests)

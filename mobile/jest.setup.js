@@ -4,6 +4,9 @@ jest.mock('react-native-reanimated', () => ({
   withTiming: jest.fn((val) => val),
   withRepeat: jest.fn((val) => val),
   withSequence: jest.fn((...vals) => vals[0]),
-  Easing: { linear: jest.fn(), inOut: jest.fn() },
-  default: { call: jest.fn() },
+  Easing: { linear: jest.fn(), inOut: jest.fn(() => jest.fn()), ease: jest.fn() },
+  default: {
+    View: 'Animated.View',
+    call: jest.fn(),
+  },
 }));
