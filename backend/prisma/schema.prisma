@@ -1,0 +1,53 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")       // PgBouncer (transaction pooler, port 6543)
+  directUrl = env("DIRECT_URL")         // Direct connection (port 5432, for migrations only)
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id         String   @id @db.Uuid
+  created_at DateTime @default(now())
+
+  intervention_logs InterventionLog[]
+
+  @@map("users")
+}
+
+model Protocol {
+  id                 String  @id @default(uuid()) @db.Uuid
+  name               String  @unique @db.VarChar(100)
+  duration_seconds   Int
+  instruction_text   String  @db.VarChar(2000)
+  animation_type     String  @db.VarChar(50)
+  audio_guide_url    String? @db.VarChar(500)
+
+  intervention_logs InterventionLog[]
+
+  @@map("protocols")
+}
+
+enum FeedbackResult {
+  better
+  no_change
+  worse
+}
+
+model InterventionLog {
+  id                      String         @id @default(uuid()) @db.Uuid
+  user_id                 String         @db.Uuid
+  protocol_id             String         @db.Uuid
+  trigger_context         String         @db.VarChar(500)
+  feedback_result         FeedbackResult
+  completed_fully         Boolean        @default(false)
+  actual_duration_seconds Int?
+  created_at              DateTime       @default(now())
+
+  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  protocol Protocol @relation(fields: [protocol_id], references: [id], onDelete: Restrict)
+
+  @@map("intervention_logs")
+}
