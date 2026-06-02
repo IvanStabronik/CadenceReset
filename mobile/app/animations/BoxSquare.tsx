@@ -7,29 +7,47 @@ import Animated, {
   withSequence,
   withTiming,
   Easing,
+  cancelAnimation,
 } from 'react-native-reanimated';
 
 interface BoxSquareProps {
   duration: number;
+  elapsedSeconds: number;
 }
 
-export default function BoxSquare({ duration }: BoxSquareProps) {
+// Box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s = 16s cycle
+const PHASE_DURATION = 4000;
+const CYCLE_DURATION = PHASE_DURATION * 4; // 16s
+
+export default function BoxSquare({ duration, elapsedSeconds }: BoxSquareProps) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    // 4 phases of 4s each = 16s cycle (inhale, hold, exhale, hold)
-    const phaseDuration = 4000;
+    // Sync progress to elapsed time
+    const elapsedMs = elapsedSeconds * 1000;
+    const positionInCycle = (elapsedMs % CYCLE_DURATION) / CYCLE_DURATION;
+    progress.value = positionInCycle;
+
+    // Calculate remaining time in current phase to resume smoothly
+    const phaseProgress = (positionInCycle * 4) % 1; // 0-1 within current phase
+    const remainingPhaseMs = (1 - phaseProgress) * PHASE_DURATION;
+    const currentPhaseTarget = (Math.floor(positionInCycle * 4) + 1) / 4;
+
+    cancelAnimation(progress);
     progress.value = withRepeat(
       withSequence(
-        withTiming(0.25, { duration: phaseDuration, easing: Easing.linear }),
-        withTiming(0.5, { duration: phaseDuration, easing: Easing.linear }),
-        withTiming(0.75, { duration: phaseDuration, easing: Easing.linear }),
-        withTiming(1, { duration: phaseDuration, easing: Easing.linear }),
+        withTiming(currentPhaseTarget, { duration: remainingPhaseMs, easing: Easing.linear }),
+        ...Array.from({ length: 3 }, (_, i) => {
+          const target = ((Math.floor(positionInCycle * 4) + 2 + i) % 4 + 1) / 4;
+          return withTiming(target > 1 ? target - 1 : target, { duration: PHASE_DURATION, easing: Easing.linear });
+        }),
       ),
       -1,
       false,
     );
-  }, [progress]);
+
+    return () => cancelAnimation(progress);
+  }, [elapsedSeconds, progress]);
 
   const dotStyle = useAnimatedStyle(() => {
     const p = progress.value % 1;
@@ -38,19 +56,15 @@ export default function BoxSquare({ duration }: BoxSquareProps) {
     const size = 120;
 
     if (p < 0.25) {
-      // Top edge: left to right
       translateX = (p / 0.25) * size;
       translateY = 0;
     } else if (p < 0.5) {
-      // Right edge: top to bottom
       translateX = size;
       translateY = ((p - 0.25) / 0.25) * size;
     } else if (p < 0.75) {
-      // Bottom edge: right to left
       translateX = size - ((p - 0.5) / 0.25) * size;
       translateY = size;
     } else {
-      // Left edge: bottom to top
       translateX = 0;
       translateY = size - ((p - 0.75) / 0.25) * size;
     }

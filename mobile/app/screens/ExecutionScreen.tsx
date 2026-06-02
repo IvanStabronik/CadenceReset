@@ -62,11 +62,11 @@ export default function ExecutionScreen() {
     if (!protocol) return null;
     switch (protocol.animation_type) {
       case 'breathing_circle':
-        return <BreathingCircle duration={duration} />;
+        return <BreathingCircle duration={duration} elapsedSeconds={elapsedSeconds} />;
       case 'box_square':
-        return <BoxSquare duration={duration} />;
+        return <BoxSquare duration={duration} elapsedSeconds={elapsedSeconds} />;
       default:
-        return <BreathingCircle duration={duration} />;
+        return <BreathingCircle duration={duration} elapsedSeconds={elapsedSeconds} />;
     }
   };
 
