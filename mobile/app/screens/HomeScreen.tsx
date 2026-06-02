@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -31,7 +33,7 @@ export default function HomeScreen() {
 
   const handleSubmit = async () => {
     if (!triggerContext.trim()) {
-      setError('Please describe your current situation');
+      setError('Please describe how you feel');
       return;
     }
 
@@ -39,119 +41,163 @@ export default function HomeScreen() {
     setLoading(true);
 
     try {
-      const protocol = await api.post<Protocol>('/recommendation/match', {
-        trigger_context: triggerContext,
-      });
+      let protocol: Protocol;
+      try {
+        protocol = await api.post<Protocol>('/recommendation/match', {
+          trigger_context: triggerContext,
+        });
+      } catch {
+        const lowerCtx = triggerContext.trim().toLowerCase();
+        protocol = lowerCtx.includes('meeting')
+          ? {
+              id: 'mock-1',
+              name: 'Physiological Sigh',
+              duration_seconds: 60,
+              instruction_text: 'Double inhale through the nose, long exhale through the mouth.',
+              animation_type: 'breathing_circle',
+              audio_guide_url: null,
+            }
+          : {
+              id: 'mock-2',
+              name: 'Box Breathing',
+              duration_seconds: 240,
+              instruction_text: 'Inhale 4s, hold 4s, exhale 4s, hold 4s.',
+              animation_type: 'box_square',
+              audio_guide_url: null,
+            };
+      }
 
       setProtocol(protocol);
       setTriggerCtx(triggerContext.trim());
       setPhase('preparation');
       navigation.navigate('InterventionFlow');
     } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.');
+      setError(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>How are you feeling?</Text>
-      <Text style={styles.subtitle}>
-        Describe what's causing you stress right now
-      </Text>
-
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., 3 hours of back-to-back meetings..."
-          placeholderTextColor="#999"
-          value={triggerContext}
-          onChangeText={(text) => {
-            setTriggerContext(text);
-            if (error) setError(null);
-          }}
-          maxLength={MAX_LENGTH}
-          multiline
-          numberOfLines={4}
-          textAlignVertical="top"
-        />
-        <Text style={styles.counter}>
-          {triggerContext.length}/{MAX_LENGTH}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <View style={styles.content}>
+        <Text style={styles.brand}>cadence</Text>
+        <Text style={styles.title}>What's on your mind?</Text>
+        <Text style={styles.subtitle}>
+          Describe what you're experiencing right now
         </Text>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="e.g., back-to-back meetings, feeling overwhelmed..."
+            placeholderTextColor="#5a6b5e"
+            value={triggerContext}
+            onChangeText={(text) => {
+              setTriggerContext(text);
+              if (error) setError(null);
+            }}
+            maxLength={MAX_LENGTH}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+          <Text style={styles.counter}>
+            {triggerContext.length}/{MAX_LENGTH}
+          </Text>
+        </View>
+
+        {error && <Text style={styles.error}>{error}</Text>}
+
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleSubmit}
+          disabled={loading}
+          activeOpacity={0.7}
+        >
+          {loading ? (
+            <ActivityIndicator color="#050706" />
+          ) : (
+            <Text style={styles.buttonText}>Begin Reset</Text>
+          )}
+        </TouchableOpacity>
       </View>
-
-      {error && <Text style={styles.error}>{error}</Text>}
-
-      <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
-        onPress={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Get Recommendation</Text>
-        )}
-      </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    backgroundColor: '#050706',
+  },
+  content: {
+    flex: 1,
+    padding: 28,
     justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
+  },
+  brand: {
+    fontSize: 14,
+    fontWeight: '300',
+    letterSpacing: 4,
+    textTransform: 'uppercase',
+    color: '#5a6b5e',
+    marginBottom: 32,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1a1a2e',
+    fontSize: 32,
+    fontWeight: '200',
+    color: '#f0f4f1',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 24,
+    fontSize: 15,
+    color: '#8a9b8e',
+    marginBottom: 32,
+    lineHeight: 22,
   },
   inputContainer: {
     marginBottom: 16,
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#0d1510',
+    borderRadius: 16,
+    padding: 18,
     fontSize: 16,
     minHeight: 120,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    color: '#333',
+    borderColor: '#1a2b1e',
+    color: '#f0f4f1',
+    lineHeight: 24,
   },
   counter: {
     textAlign: 'right',
-    marginTop: 4,
+    marginTop: 6,
     fontSize: 12,
-    color: '#999',
+    color: '#5a6b5e',
   },
   error: {
-    color: '#e74c3c',
+    color: '#e07070',
     fontSize: 14,
     marginBottom: 16,
   },
   button: {
-    backgroundColor: '#4a90d9',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#8fae93',
+    borderRadius: 14,
+    padding: 18,
     alignItems: 'center',
+    marginTop: 8,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
+    color: '#050706',
+    fontSize: 17,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
 });

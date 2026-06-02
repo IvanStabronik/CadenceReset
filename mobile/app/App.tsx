@@ -12,26 +12,21 @@ export default function App() {
   useEffect(() => {
     async function initAuth() {
       try {
-        // Try to restore existing session from secure storage
         const restored = await restoreSession();
         if (!restored) {
-          // No existing session — sign in anonymously
           await signInAnonymously();
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error);
-        // Try anonymous sign-in as fallback
-        try {
-          await signInAnonymously();
-        } catch (fallbackError) {
-          console.error('Fallback auth failed:', fallbackError);
-        }
+        console.warn('Auth initialization failed:', error);
+        // Continue anyway — user can still see the UI
       } finally {
         setIsLoading(false);
       }
     }
 
-    initAuth();
+    // Timeout: if auth takes more than 5s, show app anyway
+    const timeout = setTimeout(() => setIsLoading(false), 5000);
+    initAuth().finally(() => clearTimeout(timeout));
   }, []);
 
   if (isLoading) {

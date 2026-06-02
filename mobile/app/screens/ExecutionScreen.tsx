@@ -22,7 +22,6 @@ export default function ExecutionScreen() {
 
   const duration = protocol?.duration_seconds ?? 60;
 
-  // Set duration in store so tick() can clamp
   useEffect(() => {
     setDuration(duration);
   }, [duration, setDuration]);
@@ -37,7 +36,6 @@ export default function ExecutionScreen() {
     onComplete: handleComplete,
   });
 
-  // Back-navigation prevention during execution
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e) => {
       if (phase === 'execution') {
@@ -78,7 +76,7 @@ export default function ExecutionScreen() {
         {renderAnimation()}
       </View>
 
-      <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+      <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.6}>
         <Text style={styles.skipText}>Skip</Text>
       </TouchableOpacity>
     </View>
@@ -90,31 +88,35 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#1a1a2e',
-    padding: 24,
+    backgroundColor: '#050706',
+    padding: 28,
   },
   timer: {
-    fontSize: 48,
-    fontWeight: '300',
-    color: '#fff',
+    fontSize: 44,
+    fontWeight: '200',
+    color: '#f0f4f1',
     marginBottom: 48,
+    letterSpacing: 2,
+    fontVariant: ['tabular-nums'],
   },
   animationContainer: {
-    width: 200,
-    height: 200,
+    width: 260,
+    height: 260,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 56,
   },
   skipButton: {
     paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
+    paddingHorizontal: 36,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: 'rgba(143, 174, 147, 0.25)',
   },
   skipText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 16,
+    color: '#5a6b5e',
+    fontSize: 15,
+    fontWeight: '400',
+    letterSpacing: 1,
   },
 });

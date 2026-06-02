@@ -13,7 +13,7 @@ function formatDuration(seconds: number): string {
   const remainingSeconds = seconds % 60;
   if (minutes === 0) return `${remainingSeconds}s`;
   if (remainingSeconds === 0) return `${minutes} min`;
-  return `${minutes} min ${remainingSeconds}s`;
+  return `${minutes}m ${remainingSeconds}s`;
 }
 
 export default function PreparationScreen() {
@@ -24,7 +24,7 @@ export default function PreparationScreen() {
   if (!protocol) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>No protocol loaded</Text>
+        <Text style={styles.errorText}>Protocol not loaded</Text>
       </View>
     );
   }
@@ -36,13 +36,22 @@ export default function PreparationScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{protocol.name}</Text>
-      <Text style={styles.duration}>{formatDuration(protocol.duration_seconds)}</Text>
-      <Text style={styles.instruction}>{protocol.instruction_text}</Text>
+      <View style={styles.topSection}>
+        <Text style={styles.label}>YOUR PROTOCOL</Text>
+        <Text style={styles.title}>{protocol.name}</Text>
+        <Text style={styles.duration}>{formatDuration(protocol.duration_seconds)}</Text>
+      </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleBegin}>
-        <Text style={styles.buttonText}>Begin</Text>
-      </TouchableOpacity>
+      <View style={styles.middleSection}>
+        <Text style={styles.instruction}>{protocol.instruction_text}</Text>
+      </View>
+
+      <View style={styles.bottomSection}>
+        <Text style={styles.hint}>Find a comfortable position and take a moment to settle in</Text>
+        <TouchableOpacity style={styles.button} onPress={handleBegin} activeOpacity={0.7}>
+          <Text style={styles.buttonText}>I'm Ready</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -50,45 +59,69 @@ export default function PreparationScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
-    justifyContent: 'center',
+    backgroundColor: '#050706',
+    padding: 28,
+    justifyContent: 'space-between',
+  },
+  topSection: {
+    paddingTop: 60,
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 3,
+    color: '#5a6b5e',
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#1a1a2e',
-    marginBottom: 12,
+    fontWeight: '200',
+    color: '#f0f4f1',
+    marginBottom: 8,
     textAlign: 'center',
   },
   duration: {
-    fontSize: 20,
-    color: '#4a90d9',
-    fontWeight: '600',
-    marginBottom: 24,
+    fontSize: 18,
+    color: '#8fae93',
+    fontWeight: '300',
+  },
+  middleSection: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   instruction: {
     fontSize: 16,
-    color: '#555',
+    color: '#8a9b8e',
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 48,
-    paddingHorizontal: 16,
+    lineHeight: 26,
+  },
+  bottomSection: {
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  hint: {
+    fontSize: 13,
+    color: '#5a6b5e',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
   },
   button: {
-    backgroundColor: '#27ae60',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 48,
+    backgroundColor: '#8fae93',
+    borderRadius: 14,
+    paddingVertical: 18,
+    paddingHorizontal: 56,
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
+    color: '#050706',
+    fontSize: 17,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   errorText: {
     fontSize: 16,
-    color: '#e74c3c',
+    color: '#e07070',
+    textAlign: 'center',
   },
 });

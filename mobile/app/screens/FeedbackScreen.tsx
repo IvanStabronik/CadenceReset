@@ -10,10 +10,10 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 
 type FeedbackNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const FEEDBACK_OPTIONS: { label: string; value: FeedbackResult }[] = [
-  { label: 'Better', value: 'better' },
-  { label: 'No Change', value: 'no_change' },
-  { label: 'Worse', value: 'worse' },
+const FEEDBACK_OPTIONS: { label: string; value: FeedbackResult; emoji: string }[] = [
+  { label: 'Better', value: 'better', emoji: '✨' },
+  { label: 'Same', value: 'no_change', emoji: '—' },
+  { label: 'Worse', value: 'worse', emoji: '↓' },
 ];
 
 export default function FeedbackScreen() {
@@ -32,7 +32,6 @@ export default function FeedbackScreen() {
     setSubmitting(true);
 
     try {
-      // Guard: don't send /log if required data is missing
       if (protocol && triggerContext) {
         await api.post('/log', {
           protocol_id: protocol.id,
@@ -41,14 +40,10 @@ export default function FeedbackScreen() {
           completed_fully: completedFully,
           actual_duration_seconds: elapsedSeconds,
         });
-      } else {
-        console.warn('Missing protocol or triggerContext — skipping log');
       }
     } catch (err) {
-      // Log error but don't block user — still dismiss
-      console.error('Failed to log intervention:', err);
+      console.warn('Failed to log intervention:', err);
     } finally {
-      // Always dismiss modal and reset state
       clearProtocol();
       reset();
       navigation.getParent()?.goBack();
@@ -57,10 +52,11 @@ export default function FeedbackScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>How do you feel?</Text>
-      <Text style={styles.subtitle}>
-        Rate your state after the exercise
-      </Text>
+      <View style={styles.topSection}>
+        <Text style={styles.checkmark}>✓</Text>
+        <Text style={styles.title}>Well done</Text>
+        <Text style={styles.subtitle}>How do you feel now?</Text>
+      </View>
 
       <View style={styles.buttonsContainer}>
         {FEEDBACK_OPTIONS.map((option) => (
@@ -69,7 +65,9 @@ export default function FeedbackScreen() {
             style={[styles.button, submitting && styles.buttonDisabled]}
             onPress={() => handleFeedback(option.value)}
             disabled={submitting}
+            activeOpacity={0.7}
           >
+            <Text style={styles.buttonEmoji}>{option.emoji}</Text>
             <Text style={styles.buttonText}>{option.label}</Text>
           </TouchableOpacity>
         ))}
@@ -81,39 +79,53 @@ export default function FeedbackScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#050706',
+    padding: 28,
     justifyContent: 'center',
+  },
+  topSection: {
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    padding: 24,
+    marginBottom: 56,
+  },
+  checkmark: {
+    fontSize: 48,
+    color: '#8fae93',
+    marginBottom: 16,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#1a1a2e',
+    fontWeight: '200',
+    color: '#f0f4f1',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 48,
-    textAlign: 'center',
+    fontSize: 15,
+    color: '#8a9b8e',
   },
   buttonsContainer: {
-    width: '100%',
-    gap: 16,
+    gap: 14,
   },
   button: {
-    backgroundColor: '#4a90d9',
-    borderRadius: 12,
-    padding: 18,
+    backgroundColor: '#0d1510',
+    borderRadius: 14,
+    padding: 20,
+    flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#1a2b1e',
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
+  },
+  buttonEmoji: {
+    fontSize: 20,
+    marginRight: 16,
+    width: 28,
+    textAlign: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+    color: '#f0f4f1',
+    fontSize: 17,
+    fontWeight: '400',
   },
 });

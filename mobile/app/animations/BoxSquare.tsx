@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,58 +15,49 @@ interface BoxSquareProps {
   elapsedSeconds: number;
 }
 
-// Box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s = 16s cycle
-const PHASE_DURATION = 4000;
-const CYCLE_DURATION = PHASE_DURATION * 4; // 16s
+const PHASE_MS = 4000;
+const CYCLE_MS = PHASE_MS * 4;
+const PHASES = ['Inhale', 'Hold', 'Exhale', 'Hold'];
 
 export default function BoxSquare({ duration, elapsedSeconds }: BoxSquareProps) {
   const progress = useSharedValue(0);
 
   useEffect(() => {
-    // Sync progress to elapsed time
-    const elapsedMs = elapsedSeconds * 1000;
-    const positionInCycle = (elapsedMs % CYCLE_DURATION) / CYCLE_DURATION;
-    progress.value = positionInCycle;
-
-    // Calculate remaining time in current phase to resume smoothly
-    const phaseProgress = (positionInCycle * 4) % 1; // 0-1 within current phase
-    const remainingPhaseMs = (1 - phaseProgress) * PHASE_DURATION;
-    const currentPhaseTarget = (Math.floor(positionInCycle * 4) + 1) / 4;
-
     cancelAnimation(progress);
+    progress.value = 0;
     progress.value = withRepeat(
       withSequence(
-        withTiming(currentPhaseTarget, { duration: remainingPhaseMs, easing: Easing.linear }),
-        ...Array.from({ length: 3 }, (_, i) => {
-          const target = ((Math.floor(positionInCycle * 4) + 2 + i) % 4 + 1) / 4;
-          return withTiming(target > 1 ? target - 1 : target, { duration: PHASE_DURATION, easing: Easing.linear });
-        }),
+        withTiming(0.25, { duration: PHASE_MS, easing: Easing.linear }),
+        withTiming(0.5, { duration: PHASE_MS, easing: Easing.linear }),
+        withTiming(0.75, { duration: PHASE_MS, easing: Easing.linear }),
+        withTiming(1, { duration: PHASE_MS, easing: Easing.linear }),
       ),
       -1,
       false,
     );
-
     return () => cancelAnimation(progress);
-  }, [elapsedSeconds, progress]);
+  }, [progress]);
+
+  const SIZE = 160;
+  const DOT_SIZE = 18;
 
   const dotStyle = useAnimatedStyle(() => {
     const p = progress.value % 1;
     let translateX = 0;
     let translateY = 0;
-    const size = 120;
 
     if (p < 0.25) {
-      translateX = (p / 0.25) * size;
+      translateX = (p / 0.25) * SIZE;
       translateY = 0;
     } else if (p < 0.5) {
-      translateX = size;
-      translateY = ((p - 0.25) / 0.25) * size;
+      translateX = SIZE;
+      translateY = ((p - 0.25) / 0.25) * SIZE;
     } else if (p < 0.75) {
-      translateX = size - ((p - 0.5) / 0.25) * size;
-      translateY = size;
+      translateX = SIZE - ((p - 0.5) / 0.25) * SIZE;
+      translateY = SIZE;
     } else {
       translateX = 0;
-      translateY = size - ((p - 0.75) / 0.25) * size;
+      translateY = SIZE - ((p - 0.75) / 0.25) * SIZE;
     }
 
     return {
@@ -74,37 +65,71 @@ export default function BoxSquare({ duration, elapsedSeconds }: BoxSquareProps) 
     };
   });
 
+  // Determine current phase text
+  const phaseIndex = Math.floor(((elapsedSeconds * 1000) % CYCLE_MS) / PHASE_MS);
+  const phaseText = PHASES[phaseIndex] || 'Inhale';
+
   return (
     <View style={styles.container}>
-      <View style={styles.square} />
-      <Animated.View style={[styles.dot, dotStyle]} />
+      <View style={[styles.squareContainer, { width: SIZE + DOT_SIZE, height: SIZE + DOT_SIZE }]}>
+        {/* Corner labels */}
+        <Text style={[styles.cornerLabel, styles.topLeft]}>Inhale</Text>
+        <Text style={[styles.cornerLabel, styles.topRight]}>Hold</Text>
+        <Text style={[styles.cornerLabel, styles.bottomRight]}>Exhale</Text>
+        <Text style={[styles.cornerLabel, styles.bottomLeft]}>Hold</Text>
+
+        {/* Square path */}
+        <View style={[styles.square, { width: SIZE, height: SIZE, top: DOT_SIZE / 2, left: DOT_SIZE / 2 }]} />
+
+        {/* Moving dot */}
+        <Animated.View style={[styles.dot, { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2 }, dotStyle]} />
+      </View>
+
+      <Text style={styles.phaseText}>{phaseText}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    width: 140,
-    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  squareContainer: {
     position: 'relative',
   },
   square: {
-    width: 120,
-    height: 120,
-    borderWidth: 3,
-    borderColor: '#4a90d9',
-    borderRadius: 4,
     position: 'absolute',
-    top: 10,
-    left: 10,
+    borderWidth: 1.5,
+    borderColor: 'rgba(143, 174, 147, 0.4)',
+    borderRadius: 12,
   },
   dot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#27ae60',
     position: 'absolute',
-    top: 0,
-    left: 0,
+    backgroundColor: '#8fae93',
+    shadowColor: '#8fae93',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  cornerLabel: {
+    position: 'absolute',
+    fontSize: 10,
+    color: '#5a6b5e',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  topLeft: { top: -16, left: 9 },
+  topRight: { top: -16, right: 9 },
+  bottomRight: { bottom: -16, right: 9 },
+  bottomLeft: { bottom: -16, left: 9 },
+  phaseText: {
+    marginTop: 36,
+    fontSize: 16,
+    fontWeight: '300',
+    color: '#8a9b8e',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
   },
 });
