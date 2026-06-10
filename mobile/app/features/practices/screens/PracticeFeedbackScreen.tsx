@@ -107,12 +107,12 @@ export default function PracticeFeedbackScreen() {
     const afterScores: CheckInScores = { stress, bodyTension, mentalNoise };
     completeSession(afterScores, shift, useAgain);
     analytics.feedbackSubmitted(practiceId, shift);
-    navigation.popToTop();
+    navigation.replace('PracticeResult', { userState: route.params.userState });
   };
 
   const handleSkip = () => {
     completeWithoutFeedback();
-    navigation.popToTop();
+    navigation.replace('PracticeResult', { userState: route.params.userState });
   };
 
   return (

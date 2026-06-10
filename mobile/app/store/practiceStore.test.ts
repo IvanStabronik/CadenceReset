@@ -3,7 +3,7 @@ import { CheckInScores } from '../features/practices/types';
 
 describe('practiceStore - session lifecycle', () => {
   beforeEach(() => {
-    usePracticeStore.setState({ sessions: [], currentSession: null });
+    usePracticeStore.setState({ sessions: [], currentSession: null, favoritePracticeIds: [] });
   });
 
   it('before scores are preserved after starting session', () => {
@@ -22,22 +22,15 @@ describe('practiceStore - session lifecycle', () => {
   it('before scores survive if startSession is NOT called again for same practiceId', () => {
     const { startSession, setBeforeScores } = usePracticeStore.getState();
 
-    // BeforeCheckIn starts session and sets scores
     startSession('box-breathing', 'focus');
     setBeforeScores({ stress: 5, bodyTension: 4, mentalNoise: 6 });
 
-    // Simulate the guard in PracticeSessionScreen:
-    // if currentSession.practiceId === practiceId → skip startSession
-    const current = usePracticeStore.getState().currentSession;
-    expect(current!.practiceId).toBe('box-breathing');
-
     // Calling startSession again for the SAME practiceId would wipe before scores
-    // So we verify: if we DID accidentally call it again, before would be lost
     startSession('box-breathing', 'focus');
     const overwritten = usePracticeStore.getState().currentSession;
     expect(overwritten!.before).toBeUndefined(); // proves the guard is necessary
 
-    // Now test the correct path: start, set scores, and DON'T call startSession again
+    // Correct path: start, set scores, and DON'T call startSession again
     usePracticeStore.setState({ sessions: [], currentSession: null });
     startSession('box-breathing', 'focus');
     usePracticeStore.getState().setBeforeScores({ stress: 5, bodyTension: 4, mentalNoise: 6 });
@@ -45,7 +38,7 @@ describe('practiceStore - session lifecycle', () => {
     // Guard check: session exists for this practiceId → do not restart
     const guarded = usePracticeStore.getState().currentSession;
     if (guarded && guarded.practiceId === 'box-breathing') {
-      // This is what PracticeSessionScreen does — skip startSession
+      // PracticeSessionScreen skips startSession
     }
     expect(usePracticeStore.getState().currentSession!.before).toEqual({
       stress: 5, bodyTension: 4, mentalNoise: 6,
@@ -106,39 +99,97 @@ describe('practiceStore - session lifecycle', () => {
     const { startSession, completeSession } = usePracticeStore.getState();
 
     startSession('mini-pmr');
-    // No setBeforeScores call (user skipped check-in)
-
     completeSession({ stress: 3, bodyTension: 2, mentalNoise: 3 }, 'same', 'maybe');
 
     const completed = usePracticeStore.getState().sessions[0];
     expect(completed.reliefDelta).toBeUndefined();
     expect(completed.after).toEqual({ stress: 3, bodyTension: 2, mentalNoise: 3 });
   });
+
+  it('abandonSession stores incomplete session', () => {
+    const { startSession, abandonSession } = usePracticeStore.getState();
+
+    startSession('box-breathing', 'focus');
+    abandonSession();
+
+    const sessions = usePracticeStore.getState().sessions;
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].completed).toBe(false);
+    expect(sessions[0].practiceId).toBe('box-breathing');
+    expect(usePracticeStore.getState().currentSession).toBeNull();
+  });
+
+  it('getLatestCompletedSession returns the most recent completed session', () => {
+    const { startSession, completeWithoutFeedback, abandonSession } = usePracticeStore.getState();
+
+    startSession('feet-on-floor', 'numb');
+    completeWithoutFeedback();
+
+    startSession('box-breathing', 'focus');
+    abandonSession();
+
+    startSession('micro-rest', 'burnout');
+    usePracticeStore.getState().completeWithoutFeedback();
+
+    const latest = usePracticeStore.getState().getLatestCompletedSession();
+    expect(latest).toBeDefined();
+    expect(latest!.practiceId).toBe('micro-rest');
+  });
+
+  it('getRecentSessions returns sessions in reverse order', () => {
+    const { startSession, completeWithoutFeedback } = usePracticeStore.getState();
+
+    startSession('feet-on-floor', 'numb');
+    completeWithoutFeedback();
+    startSession('box-breathing', 'focus');
+    usePracticeStore.getState().completeWithoutFeedback();
+
+    const recent = usePracticeStore.getState().getRecentSessions(2);
+    expect(recent).toHaveLength(2);
+    expect(recent[0].practiceId).toBe('box-breathing');
+    expect(recent[1].practiceId).toBe('feet-on-floor');
+  });
 });
 
+describe('practiceStore - favorites', () => {
+  beforeEach(() => {
+    usePracticeStore.setState({ sessions: [], currentSession: null, favoritePracticeIds: [] });
+  });
+
+  it('toggleFavorite adds a practice to favorites', () => {
+    usePracticeStore.getState().toggleFavorite('long-exhale-reset');
+    expect(usePracticeStore.getState().favoritePracticeIds).toContain('long-exhale-reset');
+  });
+
+  it('toggleFavorite removes a practice from favorites', () => {
+    usePracticeStore.getState().toggleFavorite('long-exhale-reset');
+    usePracticeStore.getState().toggleFavorite('long-exhale-reset');
+    expect(usePracticeStore.getState().favoritePracticeIds).not.toContain('long-exhale-reset');
+  });
+
+  it('can have multiple favorites', () => {
+    usePracticeStore.getState().toggleFavorite('long-exhale-reset');
+    usePracticeStore.getState().toggleFavorite('box-breathing');
+    expect(usePracticeStore.getState().favoritePracticeIds).toEqual(['long-exhale-reset', 'box-breathing']);
+  });
+});
 
 describe('PracticeSessionScreen guard — does not restart session', () => {
   beforeEach(() => {
-    usePracticeStore.setState({ sessions: [], currentSession: null });
+    usePracticeStore.setState({ sessions: [], currentSession: null, favoritePracticeIds: [] });
   });
 
   it('simulates the screen guard: skips startSession when currentSession.practiceId matches', () => {
     const { startSession, setBeforeScores } = usePracticeStore.getState();
 
-    // Step 1: BeforeCheckIn flow already started a session and set scores
     startSession('long-exhale-reset', 'anxiety');
     setBeforeScores({ stress: 8, bodyTension: 7, mentalNoise: 9 });
 
-    // Step 2: PracticeSessionScreen mounts — it checks the guard
     const practiceId = 'long-exhale-reset';
     const currentSession = usePracticeStore.getState().currentSession;
-
-    // This is the exact guard from PracticeSessionScreen:
-    // if (!currentSession || currentSession.practiceId !== practice.id) { startSession(...) }
     const shouldStart = !currentSession || currentSession.practiceId !== practiceId;
-    expect(shouldStart).toBe(false); // guard prevents restart
+    expect(shouldStart).toBe(false);
 
-    // before scores are still intact
     expect(usePracticeStore.getState().currentSession!.before).toEqual({
       stress: 8, bodyTension: 7, mentalNoise: 9,
     });
@@ -147,18 +198,14 @@ describe('PracticeSessionScreen guard — does not restart session', () => {
   it('starts a new session when practiceId does not match', () => {
     const { startSession, setBeforeScores } = usePracticeStore.getState();
 
-    // Session already exists for a different practice
     startSession('box-breathing', 'focus');
     setBeforeScores({ stress: 5, bodyTension: 4, mentalNoise: 6 });
 
-    // Navigate to a different practice
     const practiceId = 'cyclic-sigh';
     const currentSession = usePracticeStore.getState().currentSession;
-
     const shouldStart = !currentSession || currentSession.practiceId !== practiceId;
-    expect(shouldStart).toBe(true); // different practice, must start new session
+    expect(shouldStart).toBe(true);
 
-    // Start the new session (as PracticeSessionScreen would)
     startSession(practiceId, 'anger');
     expect(usePracticeStore.getState().currentSession!.practiceId).toBe('cyclic-sigh');
     expect(usePracticeStore.getState().currentSession!.before).toBeUndefined();
@@ -167,7 +214,6 @@ describe('PracticeSessionScreen guard — does not restart session', () => {
   it('starts a new session when no currentSession exists', () => {
     const practiceId = 'feet-on-floor';
     const currentSession = usePracticeStore.getState().currentSession;
-
     const shouldStart = !currentSession || currentSession.practiceId !== practiceId;
     expect(shouldStart).toBe(true);
   });

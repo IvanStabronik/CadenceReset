@@ -24,14 +24,112 @@ export function getRecommendedPractices(state: UserState): Practice[] {
 }
 
 export const STATE_OPTIONS: { label: string; value: UserState }[] = [
-  { label: 'Calm anxiety', value: 'anxiety' },
-  { label: 'Stop overthinking', value: 'overthinking' },
-  { label: 'Release body tension', value: 'bodyTension' },
-  { label: 'Cool down anger', value: 'anger' },
-  { label: 'Come back to my body', value: 'numb' },
-  { label: 'Fall asleep', value: 'sleep' },
-  { label: 'Regain focus', value: 'focus' },
-  { label: 'Recover from burnout', value: 'burnout' },
-  { label: 'Reset after work stress', value: 'workStress' },
+  { label: 'Anxious', value: 'anxiety' },
+  { label: 'Overthinking', value: 'overthinking' },
+  { label: 'Tense body', value: 'bodyTension' },
+  { label: 'Angry', value: 'anger' },
+  { label: 'Numb / frozen', value: 'numb' },
+  { label: 'Need sleep', value: 'sleep' },
+  { label: 'Need focus', value: 'focus' },
+  { label: 'Burned out', value: 'burnout' },
+  { label: 'Work stress', value: 'workStress' },
   { label: 'Quick reset', value: 'quickReset' },
 ];
+
+const USER_STATE_LABELS: Record<UserState, string> = {
+  anxiety: 'Anxious',
+  panicLite: 'Panic-like activation',
+  overthinking: 'Overthinking',
+  bodyTension: 'Tense body',
+  anger: 'Angry',
+  numb: 'Numb / frozen',
+  sleep: 'Need sleep',
+  focus: 'Need focus',
+  burnout: 'Burned out',
+  workStress: 'Work stress',
+  sadness: 'Sadness',
+  shame: 'Shame',
+  lowEnergy: 'Low energy',
+  quickReset: 'Quick reset',
+};
+
+export function getUserStateLabel(state: UserState): string {
+  return USER_STATE_LABELS[state] || state;
+}
+
+const RECOMMENDATION_REASONS: Partial<Record<UserState, Record<string, string>>> = {
+  anxiety: {
+    'long-exhale-reset': 'Longer exhales may help the body settle.',
+    'five-four-three-two-one-grounding': 'Engages the senses to pull attention outward.',
+    'room-orientation': 'Slow visual orienting can reduce inner tunnel vision.',
+  },
+  overthinking: {
+    'notice-the-thought': 'Observes thoughts without engaging them.',
+    'room-orientation': 'Brings attention from inner loops to external space.',
+    'let-the-day-end': 'Helps release the day before it replays.',
+  },
+  bodyTension: {
+    'jaw-shoulders-release': 'Targets common tension-holding areas directly.',
+    'mini-pmr': 'Squeeze-and-release moves tension out of the body.',
+    'desk-body-release': 'Quick body reset without standing up.',
+  },
+  anger: {
+    'cyclic-sigh': 'Double inhale, long exhale to discharge activation.',
+    'anger-cooling': 'Gives anger a safe physical channel.',
+    'jaw-shoulders-release': 'Releases tension from clenching.',
+  },
+  numb: {
+    'feet-on-floor': 'Physical contact brings attention back to the body.',
+    'room-orientation': 'Visual engagement counters dissociation.',
+    'five-four-three-two-one-grounding': 'Senses reconnect you to the present.',
+  },
+  sleep: {
+    'sleep-exhale': 'Progressively longer exhales prepare the body for rest.',
+    'body-heavy': 'Invites heaviness to ease into sleep.',
+    'let-the-day-end': 'Releases what happened today so sleep can come.',
+  },
+  focus: {
+    'box-breathing': 'Structured rhythm sharpens attention.',
+    'before-meeting-reset': 'Quick presence reset before demanding tasks.',
+    'one-small-next-step': 'Cuts through overwhelm with one micro-action.',
+  },
+  burnout: {
+    'micro-rest': 'Permission to stop for 60 seconds.',
+    'no-force-breathing': 'Breathing without technique or effort.',
+    'low-energy-check-in': 'Gentle check-in that asks very little.',
+  },
+  workStress: {
+    'before-meeting-reset': 'Quick reset between meetings or tasks.',
+    'desk-body-release': 'Releases sitting tension without leaving the desk.',
+    'long-exhale-reset': 'Calms the body after sustained pressure.',
+  },
+  sadness: {
+    'sadness-grounding': 'Be with sadness without drowning in it.',
+    'body-heavy': 'Lets the body rest when emotion is heavy.',
+    'low-energy-check-in': 'Low-demand acknowledgment of how you feel.',
+  },
+  shame: {
+    'shame-softening': 'Creates distance from the inner critic.',
+    'room-orientation': 'Shifts attention from internal judgment to external space.',
+    'notice-the-thought': 'Observes shame-thoughts as passing events.',
+  },
+  lowEnergy: {
+    'low-energy-check-in': 'Requires almost nothing. Just notice.',
+    'micro-rest': 'A tiny intentional pause.',
+    'one-small-next-step': 'One small action to start moving again.',
+  },
+  quickReset: {
+    'long-exhale-reset': 'Fast breathing reset in under 2 minutes.',
+    'feet-on-floor': 'Instant grounding in under a minute.',
+    'jaw-shoulders-release': 'Quick tension release for common holding areas.',
+  },
+  panicLite: {
+    'five-four-three-two-one-grounding': 'Grounds through all senses to interrupt panic.',
+    'feet-on-floor': 'Simple body contact to anchor attention.',
+    'room-orientation': 'Slow looking around interrupts narrowed vision.',
+  },
+};
+
+export function getRecommendationReason(state: UserState, practiceId: string): string {
+  return RECOMMENDATION_REASONS[state]?.[practiceId] || '';
+}

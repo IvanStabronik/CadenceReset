@@ -8,6 +8,7 @@ import PracticeDetailScreen from '../features/practices/screens/PracticeDetailSc
 import PracticeBeforeCheckInScreen from '../features/practices/screens/PracticeBeforeCheckInScreen';
 import PracticeSessionScreen from '../features/practices/screens/PracticeSessionScreen';
 import PracticeFeedbackScreen from '../features/practices/screens/PracticeFeedbackScreen';
+import PracticeResultScreen from '../features/practices/screens/PracticeResultScreen';
 import { UserState } from '../features/practices/types';
 
 export type RootStackParamList = {
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   PracticeBeforeCheckIn: { practiceId: string; userState?: UserState };
   PracticeSession: { practiceId: string; userState?: UserState };
   PracticeFeedback: { practiceId: string; userState?: UserState };
+  PracticeResult: { userState?: UserState } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -42,6 +44,7 @@ export default function RootNavigator() {
         options={{ gestureEnabled: false }}
       />
       <Stack.Screen name="PracticeFeedback" component={PracticeFeedbackScreen} />
+      <Stack.Screen name="PracticeResult" component={PracticeResultScreen} />
     </Stack.Navigator>
   );
 }

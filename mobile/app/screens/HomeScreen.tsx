@@ -1,149 +1,73 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { api } from '../services/api';
-import { useProtocolStore } from '../store/useProtocolStore';
-import { useSessionStore } from '../store/useSessionStore';
-import { Protocol } from '../types';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { STATE_OPTIONS } from '../features/practices/recommendations';
+import { UserState } from '../features/practices/types';
 import { RootStackParamList } from '../navigation/RootNavigator';
+import { usePracticeStore } from '../store/practiceStore';
+import RecentResets from '../features/practices/components/RecentResets';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
-const MAX_LENGTH = 500;
-
 export default function HomeScreen() {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const [triggerContext, setTriggerContext] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const sessions = usePracticeStore((s) => s.sessions);
+  const recentSessions = [...sessions].reverse().slice(0, 5);
 
-  const setProtocol = useProtocolStore((state) => state.setProtocol);
-  const setPhase = useSessionStore((state) => state.setPhase);
-  const setTriggerCtx = useSessionStore((state) => state.setTriggerContext);
-
-  const handleSubmit = async () => {
-    if (!triggerContext.trim()) {
-      setError('Please describe how you feel');
-      return;
-    }
-
-    setError(null);
-    setLoading(true);
-
-    try {
-      let protocol: Protocol;
-      try {
-        protocol = await api.post<Protocol>('/recommendation/match', {
-          trigger_context: triggerContext,
-        });
-      } catch {
-        const lowerCtx = triggerContext.trim().toLowerCase();
-        protocol = lowerCtx.includes('meeting')
-          ? {
-              id: 'mock-1',
-              name: 'Physiological Sigh',
-              duration_seconds: 60,
-              instruction_text: 'Double inhale through the nose, long exhale through the mouth.',
-              animation_type: 'breathing_circle',
-              audio_guide_url: null,
-            }
-          : {
-              id: 'mock-2',
-              name: 'Box Breathing',
-              duration_seconds: 240,
-              instruction_text: 'Inhale 4s, hold 4s, exhale 4s, hold 4s.',
-              animation_type: 'box_square',
-              audio_guide_url: null,
-            };
-      }
-
-      setProtocol(protocol);
-      setTriggerCtx(triggerContext.trim());
-      setPhase('preparation');
-      navigation.navigate('InterventionFlow');
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
+  const handleStateSelect = (state: UserState) => {
+    navigation.navigate('PracticeLibrary', { userState: state });
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.content}>
-        <Text style={styles.brand}>cadence</Text>
-        <Text style={styles.title}>What's on your mind?</Text>
-        <Text style={styles.subtitle}>
-          Describe what you're experiencing right now
-        </Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.brand}>cadence reset</Text>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="e.g., back-to-back meetings, feeling overwhelmed..."
-            placeholderTextColor="#5a6b5e"
-            value={triggerContext}
-            onChangeText={(text) => {
-              setTriggerContext(text);
-              if (error) setError(null);
-            }}
-            maxLength={MAX_LENGTH}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-          <Text style={styles.counter}>
-            {triggerContext.length}/{MAX_LENGTH}
-          </Text>
+        <Text style={styles.title}>How are you right now?</Text>
+
+        <View style={styles.grid}>
+          {STATE_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={styles.stateButton}
+              onPress={() => handleStateSelect(option.value)}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={option.label}
+            >
+              <Text style={styles.stateButtonText}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {error && <Text style={styles.error}>{error}</Text>}
+        <Text style={styles.hint}>
+          2–5 minute guided resets. No account needed.
+        </Text>
 
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={loading}
-          activeOpacity={0.7}
-        >
-          {loading ? (
-            <ActivityIndicator color="#050706" />
-          ) : (
-            <Text style={styles.buttonText}>Begin Reset</Text>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.practiceLinks}>
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => navigation.navigate('StateCheckIn')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.secondaryButtonText}>What do you need?</Text>
-          </TouchableOpacity>
-
+        <View style={styles.secondaryRow}>
           <TouchableOpacity
             style={styles.secondaryButton}
             onPress={() => navigation.navigate('PracticeLibrary')}
             activeOpacity={0.7}
           >
-            <Text style={styles.secondaryButtonText}>Browse Practices</Text>
+            <Text style={styles.secondaryButtonText}>Browse all practices</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+
+        <RecentResets sessions={recentSessions} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -153,12 +77,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#050706',
   },
   content: {
-    flex: 1,
     padding: 28,
-    justifyContent: 'center',
+    paddingTop: 24,
+    paddingBottom: 60,
   },
   brand: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '300',
     letterSpacing: 4,
     textTransform: 'uppercase',
@@ -166,66 +90,39 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '200',
     color: '#f0f4f1',
-    marginBottom: 8,
+    marginBottom: 24,
   },
-  subtitle: {
-    fontSize: 15,
-    color: '#8a9b8e',
-    marginBottom: 32,
-    lineHeight: 22,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 20,
   },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  input: {
+  stateButton: {
     backgroundColor: '#0d1510',
-    borderRadius: 16,
-    padding: 18,
-    fontSize: 16,
-    minHeight: 120,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     borderWidth: 1,
     borderColor: '#1a2b1e',
+  },
+  stateButtonText: {
     color: '#f0f4f1',
-    lineHeight: 24,
+    fontSize: 15,
+    fontWeight: '400',
   },
-  counter: {
-    textAlign: 'right',
-    marginTop: 6,
-    fontSize: 12,
+  hint: {
+    fontSize: 13,
     color: '#5a6b5e',
+    marginBottom: 24,
   },
-  error: {
-    color: '#e07070',
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  button: {
-    backgroundColor: '#8fae93',
-    borderRadius: 14,
-    padding: 18,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: '#050706',
-    fontSize: 17,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  practiceLinks: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    gap: 12,
+  secondaryRow: {
+    marginBottom: 32,
   },
   secondaryButton: {
-    flex: 1,
     backgroundColor: '#0d1510',
     borderRadius: 14,
     padding: 16,

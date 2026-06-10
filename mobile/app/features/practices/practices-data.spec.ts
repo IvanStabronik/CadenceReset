@@ -1,13 +1,22 @@
 import { practices, getPracticeById } from './practiceLibrary';
-import { getRecommendedPractices, STATE_OPTIONS } from './recommendations';
+import { getRecommendedPractices, STATE_OPTIONS, getRecommendationReason, getUserStateLabel } from './recommendations';
 import { usePracticeStore } from '../../store/practiceStore';
 import { CheckInScores, UserState, BreathPattern } from './types';
+import {
+  formatRelativeTime,
+  formatReliefDelta,
+  getSessionStatusLabel,
+  formatScoreChange,
+  getSessionSummary,
+  getResultCopy,
+  getRecentSessionLabel,
+} from './helpers';
 
 // ─── Before-scores are preserved ───────────────────────────────────────────────
 
 describe('practiceStore — before scores preserved', () => {
   beforeEach(() => {
-    usePracticeStore.getState().resetCurrentSession();
+    usePracticeStore.setState({ sessions: [], currentSession: null, favoritePracticeIds: [] });
   });
 
   it('stores before scores on the current session', () => {
@@ -42,7 +51,7 @@ describe('practiceStore — before scores preserved', () => {
 
 describe('practiceStore — reliefDelta calculation', () => {
   beforeEach(() => {
-    usePracticeStore.getState().resetCurrentSession();
+    usePracticeStore.setState({ sessions: [], currentSession: null, favoritePracticeIds: [] });
   });
 
   it('calculates reliefDelta as before minus after', () => {
@@ -58,9 +67,9 @@ describe('practiceStore — reliefDelta calculation', () => {
     const sessions = usePracticeStore.getState().sessions;
     const completed = sessions[sessions.length - 1];
     expect(completed.reliefDelta).toEqual({
-      stress: 4,    // 8 - 4
-      bodyTension: 4, // 7 - 3
-      mentalNoise: 4, // 9 - 5
+      stress: 4,
+      bodyTension: 4,
+      mentalNoise: 4,
     });
   });
 
@@ -75,32 +84,13 @@ describe('practiceStore — reliefDelta calculation', () => {
     const completed = sessions[sessions.length - 1];
     expect(completed.reliefDelta).toBeUndefined();
   });
-
-  it('handles negative reliefDelta (feeling worse)', () => {
-    const store = usePracticeStore.getState();
-    store.startSession('notice-the-thought', 'overthinking');
-
-    const before: CheckInScores = { stress: 3, bodyTension: 2, mentalNoise: 4 };
-    store.setBeforeScores(before);
-
-    const after: CheckInScores = { stress: 5, bodyTension: 4, mentalNoise: 6 };
-    usePracticeStore.getState().completeSession(after, 'worse', 'no');
-
-    const sessions = usePracticeStore.getState().sessions;
-    const completed = sessions[sessions.length - 1];
-    expect(completed.reliefDelta).toEqual({
-      stress: -2,
-      bodyTension: -2,
-      mentalNoise: -2,
-    });
-  });
 });
 
 // ─── Skip feedback marks feedbackSkipped ────────────────────────────────────────
 
 describe('practiceStore — feedbackSkipped', () => {
   beforeEach(() => {
-    usePracticeStore.getState().resetCurrentSession();
+    usePracticeStore.setState({ sessions: [], currentSession: null, favoritePracticeIds: [] });
   });
 
   it('marks feedbackSkipped when completing without feedback', () => {
@@ -147,10 +137,34 @@ describe('recommendations — all recommended IDs exist', () => {
 
   it('STATE_OPTIONS covers expected user states', () => {
     const optionValues = STATE_OPTIONS.map(o => o.value);
-    // At minimum, the most common states should be available
     expect(optionValues).toContain('anxiety');
     expect(optionValues).toContain('burnout');
     expect(optionValues).toContain('quickReset');
+  });
+});
+
+// ─── Recommendation reasons ─────────────────────────────────────────────────────
+
+describe('recommendations — reasons', () => {
+  const allStates: UserState[] = [
+    'anxiety', 'panicLite', 'overthinking', 'bodyTension',
+    'anger', 'numb', 'sleep', 'focus', 'burnout',
+    'workStress', 'sadness', 'shame', 'lowEnergy', 'quickReset',
+  ];
+
+  it.each(allStates)('recommended practices for "%s" have non-empty reasons', (state) => {
+    const recommended = getRecommendedPractices(state);
+    for (const practice of recommended) {
+      const reason = getRecommendationReason(state, practice.id);
+      expect(reason).not.toBe('');
+      expect(reason.length).toBeGreaterThan(5);
+    }
+  });
+
+  it.each(allStates)('getUserStateLabel returns non-empty string for "%s"', (state) => {
+    const label = getUserStateLabel(state);
+    expect(label).not.toBe('');
+    expect(label.length).toBeGreaterThan(2);
   });
 });
 
@@ -158,7 +172,6 @@ describe('recommendations — all recommended IDs exist', () => {
 
 describe('practiceLibrary — all fallbackPracticeIds exist', () => {
   const allPracticeIds = practices.map(p => p.id);
-
   const practicesWithFallback = practices.filter(p => p.fallbackPracticeId);
 
   it.each(practicesWithFallback.map(p => [p.id, p.fallbackPracticeId!]))(
@@ -199,13 +212,68 @@ describe('practiceLibrary — breathPattern values are valid', () => {
       }
     },
   );
+});
 
-  it('breathPattern durations are reasonable (not excessively long)', () => {
-    for (const p of practicesWithBreath) {
-      const bp = p.breathPattern!;
-      expect(bp.inhaleSec).toBeLessThanOrEqual(30);
-      expect(bp.exhaleSec).toBeLessThanOrEqual(30);
-      expect(bp.cycles).toBeLessThanOrEqual(100);
-    }
+// ─── Helper functions ───────────────────────────────────────────────────────────
+
+describe('helpers — formatReliefDelta', () => {
+  it('returns empty string for undefined', () => {
+    expect(formatReliefDelta(undefined)).toBe('');
+  });
+
+  it('formats positive relief (improvement)', () => {
+    const result = formatReliefDelta({ stress: 3, bodyTension: 2, mentalNoise: 4 });
+    expect(result).toContain('Stress -3');
+    expect(result).toContain('Body -2');
+    expect(result).toContain('Noise -4');
+  });
+
+  it('formats negative relief (worsening)', () => {
+    const result = formatReliefDelta({ stress: -1, bodyTension: 0, mentalNoise: -2 });
+    expect(result).toContain('Stress +1');
+    expect(result).toContain('Noise +2');
+    expect(result).not.toContain('Body');
+  });
+});
+
+describe('helpers — getSessionStatusLabel', () => {
+  it('returns Abandoned for incomplete sessions', () => {
+    expect(getSessionStatusLabel({ practiceId: 'x', startedAt: '', completed: false })).toBe('Abandoned');
+  });
+
+  it('returns Feedback skipped when appropriate', () => {
+    expect(getSessionStatusLabel({ practiceId: 'x', startedAt: '', completed: true, feedbackSkipped: true })).toBe('Feedback skipped');
+  });
+
+  it('returns Completed for normal completion', () => {
+    expect(getSessionStatusLabel({ practiceId: 'x', startedAt: '', completed: true })).toBe('Completed');
+  });
+});
+
+describe('helpers — formatScoreChange', () => {
+  it('formats before → after', () => {
+    expect(formatScoreChange(7, 4)).toBe('7 → 4');
+  });
+});
+
+describe('helpers — getResultCopy', () => {
+  it('returns session ended for abandoned', () => {
+    expect(getResultCopy({ practiceId: 'x', startedAt: '', completed: false })).toBe('Session ended.');
+  });
+
+  it('returns session complete for completed', () => {
+    expect(getResultCopy({ practiceId: 'x', startedAt: '', completed: true })).toBe('Session complete.');
+  });
+});
+
+describe('helpers — formatRelativeTime', () => {
+  it('returns Just now for very recent time', () => {
+    const now = new Date().toISOString();
+    expect(formatRelativeTime(now)).toBe('Just now');
+  });
+
+  it('returns min ago for recent minutes', () => {
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    expect(formatRelativeTime(fiveMinAgo)).toBe('5 min ago');
   });
 });

@@ -5,6 +5,8 @@ import { Practice } from '../types';
 interface PracticeCardProps {
   practice: Practice;
   onPress: () => void;
+  reason?: string;
+  rank?: number;
 }
 
 function formatDuration(seconds: number): string {
@@ -16,7 +18,7 @@ function categoryLabel(category: string): string {
   return category.charAt(0).toUpperCase() + category.slice(1);
 }
 
-export default function PracticeCard({ practice, onPress }: PracticeCardProps) {
+export default function PracticeCard({ practice, onPress, reason, rank }: PracticeCardProps) {
   return (
     <TouchableOpacity
       style={styles.card}
@@ -26,13 +28,19 @@ export default function PracticeCard({ practice, onPress }: PracticeCardProps) {
       accessibilityLabel={`${practice.title}, ${formatDuration(practice.durationSec)}, ${categoryLabel(practice.category)}`}
     >
       <View style={styles.header}>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{categoryLabel(practice.category)}</Text>
+        <View style={styles.headerLeft}>
+          {rank !== undefined && (
+            <Text style={styles.rank}>{rank}.</Text>
+          )}
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryText}>{categoryLabel(practice.category)}</Text>
+          </View>
         </View>
         <Text style={styles.duration}>{formatDuration(practice.durationSec)}</Text>
       </View>
       <Text style={styles.title}>{practice.title}</Text>
       <Text style={styles.subtitle}>{practice.subtitle}</Text>
+      {reason ? <Text style={styles.reason}>{reason}</Text> : null}
       <View style={styles.footer}>
         <View style={styles.intensityBadge}>
           <Text style={styles.intensityText}>{practice.intensity}</Text>
@@ -56,6 +64,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rank: {
+    color: '#8fae93',
+    fontSize: 14,
+    fontWeight: '600',
   },
   categoryBadge: {
     backgroundColor: 'rgba(143, 174, 147, 0.12)',
@@ -84,7 +102,14 @@ const styles = StyleSheet.create({
     color: '#8a9b8e',
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: 8,
+  },
+  reason: {
+    color: '#5a6b5e',
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 10,
+    fontStyle: 'italic',
   },
   footer: {
     flexDirection: 'row',

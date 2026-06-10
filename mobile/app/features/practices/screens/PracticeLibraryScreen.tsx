@@ -11,7 +11,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { practices } from '../practiceLibrary';
-import { getRecommendedPractices } from '../recommendations';
+import { getRecommendedPractices, getUserStateLabel, getRecommendationReason } from '../recommendations';
 import { Practice, PracticeCategory, UserState } from '../types';
 import PracticeCard from '../components/PracticeCard';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
@@ -61,12 +61,16 @@ export default function PracticeLibraryScreen() {
     ? 'Recommended for you'
     : 'Practice Library';
 
+  const subtitleText = userState
+    ? `Based on: ${getUserStateLabel(userState)}`
+    : undefined;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{headerText}</Text>
-        {userState && (
-          <Text style={styles.subtitle}>Based on your current state</Text>
+        {subtitleText && (
+          <Text style={styles.subtitle}>{subtitleText}</Text>
         )}
       </View>
 
@@ -103,10 +107,12 @@ export default function PracticeLibraryScreen() {
       <FlatList
         data={displayPractices}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <PracticeCard
             practice={item}
             onPress={() => handlePracticePress(item)}
+            reason={userState ? getRecommendationReason(userState, item.id) : undefined}
+            rank={userState ? index + 1 : undefined}
           />
         )}
         contentContainerStyle={styles.list}
