@@ -15,6 +15,7 @@ import { getRecommendedPractices } from '../recommendations';
 import { Practice, PracticeCategory, UserState } from '../types';
 import PracticeCard from '../components/PracticeCard';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
+import { analytics } from '../../../services/analytics';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'PracticeLibrary'>;
 type ScreenRouteProp = RouteProp<RootStackParamList, 'PracticeLibrary'>;
@@ -50,7 +51,10 @@ export default function PracticeLibraryScreen() {
   }, [selectedCategory, userState]);
 
   const handlePracticePress = (practice: Practice) => {
-    navigation.navigate('PracticeDetail', { practiceId: practice.id });
+    if (userState) {
+      analytics.recommendationSelected(userState, practice.id);
+    }
+    navigation.navigate('PracticeDetail', { practiceId: practice.id, userState });
   };
 
   const headerText = userState

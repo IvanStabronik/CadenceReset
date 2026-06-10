@@ -16,6 +16,7 @@ export const practices: Practice[] = [
     beforePrompt: 'Notice your current stress level before starting.',
     afterPrompt: 'Notice whether anything feels even slightly different.',
     fallbackPracticeId: 'five-four-three-two-one-grounding',
+    breathPattern: { inhaleSec: 4, exhaleSec: 6, cycles: 10 },
     pack: 'mvp',
     steps: [
       { id: 'lon-1', title: 'Settle', instruction: 'Sit or stand in a comfortable position. Let your shoulders drop slightly. You do not need to breathe perfectly.', durationSec: 15, phase: 'intro' },
@@ -41,6 +42,7 @@ export const practices: Practice[] = [
     beforePrompt: 'Notice the level of activation in your body right now.',
     afterPrompt: 'Check in — has anything shifted even slightly?',
     fallbackPracticeId: 'long-exhale-reset',
+    breathPattern: { inhaleSec: 3, exhaleSec: 6, holdAfterInhaleSec: 1, cycles: 8 },
     pack: 'mvp',
     steps: [
       { id: 'cyc-1', title: 'Settle', instruction: 'Find a comfortable position. Shoulders relaxed.', durationSec: 10, phase: 'intro' },
@@ -66,6 +68,7 @@ export const practices: Practice[] = [
     beforePrompt: 'Rate your mental clarity right now.',
     afterPrompt: 'Notice if your mind feels any clearer or calmer.',
     fallbackPracticeId: 'long-exhale-reset',
+    breathPattern: { inhaleSec: 4, exhaleSec: 4, holdAfterInhaleSec: 4, holdAfterExhaleSec: 4, cycles: 8 },
     pack: 'mvp',
     steps: [
       { id: 'box-1', title: 'Settle', instruction: 'Sit upright. Rest your hands. Close your eyes if comfortable.', durationSec: 15, phase: 'intro' },
