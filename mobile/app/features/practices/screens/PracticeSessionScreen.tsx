@@ -60,9 +60,9 @@ export default function PracticeSessionScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Timer logic
+  // Timer logic — only for step mode (not breath mode)
   useEffect(() => {
-    if (!isStarted || isPaused) return;
+    if (!isStarted || isPaused || useBreathMode) return;
 
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
@@ -76,7 +76,7 @@ export default function PracticeSessionScreen() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isStarted, isPaused, currentStepIndex]);
+  }, [isStarted, isPaused, currentStepIndex, useBreathMode]);
 
   // Auto-advance when timer hits 0
   useEffect(() => {
@@ -129,7 +129,7 @@ export default function PracticeSessionScreen() {
     );
   };
 
-  if (!practice || !currentStep) {
+  if (!practice || (!useBreathMode && !currentStep)) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
@@ -147,7 +147,7 @@ export default function PracticeSessionScreen() {
           <Text style={styles.exitText}>✕</Text>
         </TouchableOpacity>
         <Text style={styles.stepIndicator}>
-          {currentStepIndex + 1} / {totalSteps}
+          {useBreathMode ? 'Breathing' : `${currentStepIndex + 1} / ${totalSteps}`}
         </Text>
         <TouchableOpacity onPress={handlePauseResume} accessibilityRole="button" accessibilityLabel={isPaused ? 'Resume' : 'Pause'}>
           <Text style={styles.pauseText}>{isPaused ? '▶' : '⏸'}</Text>
@@ -169,22 +169,25 @@ export default function PracticeSessionScreen() {
         </View>
       )}
 
-      {/* Step content */}
-      {!isPaused && useBreathMode && practice.breathPattern && (
+      {/* Breath mode — always mounted, receives paused prop */}
+      {useBreathMode && practice.breathPattern && (
         <BreathingSessionView
           breathPattern={practice.breathPattern}
+          paused={isPaused}
           onComplete={() => {
             analytics.practiceCompleted(practice.id);
             navigation.replace('PracticeFeedback', { practiceId: practice.id, userState });
           }}
         />
       )}
+
+      {/* Step mode content */}
       {!isPaused && !useBreathMode && (
         <PracticeStepView step={currentStep} timeRemaining={timeRemaining} />
       )}
 
-      {/* Bottom controls */}
-      {!isPaused && (
+      {/* Bottom controls — hidden in breath mode */}
+      {!isPaused && !useBreathMode && (
         <View style={styles.bottomBar}>
           <TouchableOpacity
             style={styles.nextButton}

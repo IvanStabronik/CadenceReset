@@ -11,6 +11,7 @@ import { BreathPattern } from '../types';
 interface BreathingSessionViewProps {
   breathPattern: BreathPattern;
   onComplete: () => void;
+  paused?: boolean;
 }
 
 type BreathPhase = 'inhale' | 'holdIn' | 'exhale' | 'holdOut';
@@ -41,12 +42,13 @@ function getPhaseSequence(pattern: BreathPattern): BreathPhase[] {
   return seq;
 }
 
-export default function BreathingSessionView({ breathPattern, onComplete }: BreathingSessionViewProps) {
+export default function BreathingSessionView({ breathPattern, onComplete, paused = false }: BreathingSessionViewProps) {
   const [currentCycle, setCurrentCycle] = useState(1);
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [countdown, setCountdown] = useState(0);
   const scale = useSharedValue(0.6);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const remainingRef = useRef<number>(0);
 
   const phases = getPhaseSequence(breathPattern);
   const currentPhase = phases[phaseIndex];
@@ -69,6 +71,7 @@ export default function BreathingSessionView({ breathPattern, onComplete }: Brea
 
   // Animate circle based on phase
   useEffect(() => {
+    if (paused) return;
     const duration = phaseDuration * 1000;
     switch (currentPhase) {
       case 'inhale':
@@ -79,24 +82,31 @@ export default function BreathingSessionView({ breathPattern, onComplete }: Brea
         break;
       // hold phases: no animation change
     }
-  }, [currentPhase, phaseDuration, scale]);
+  }, [currentPhase, phaseDuration, scale, paused]);
 
-  // Countdown timer for current phase
+  // Stop interval when paused, preserve state
   useEffect(() => {
-    setCountdown(phaseDuration);
+    if (paused) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
 
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    // Resume or start: use current countdown as the remaining time
+    const startRemaining = countdown > 0 ? countdown : phaseDuration;
+    remainingRef.current = startRemaining;
 
-    if (phaseDuration === 0) {
+    if (startRemaining === 0) {
       advancePhase();
       return;
     }
 
-    let remaining = phaseDuration;
     intervalRef.current = setInterval(() => {
-      remaining -= 1;
-      setCountdown(remaining);
-      if (remaining <= 0) {
+      remainingRef.current -= 1;
+      setCountdown(remainingRef.current);
+      if (remainingRef.current <= 0) {
         if (intervalRef.current) clearInterval(intervalRef.current);
         advancePhase();
       }
@@ -105,7 +115,16 @@ export default function BreathingSessionView({ breathPattern, onComplete }: Brea
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [phaseIndex, currentCycle, phaseDuration, advancePhase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paused, phaseIndex, currentCycle]);
+
+  // Reset countdown when phase changes (only when not paused)
+  useEffect(() => {
+    if (!paused) {
+      setCountdown(phaseDuration);
+      remainingRef.current = phaseDuration;
+    }
+  }, [phaseIndex, currentCycle, phaseDuration, paused]);
 
   const circleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],

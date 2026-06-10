@@ -26,13 +26,30 @@ describe('practiceStore - session lifecycle', () => {
     startSession('box-breathing', 'focus');
     setBeforeScores({ stress: 5, bodyTension: 4, mentalNoise: 6 });
 
-    // Simulate what PracticeSessionScreen should do — check before starting
+    // Simulate the guard in PracticeSessionScreen:
+    // if currentSession.practiceId === practiceId → skip startSession
     const current = usePracticeStore.getState().currentSession;
     expect(current!.practiceId).toBe('box-breathing');
-    expect(current!.before).toEqual({ stress: 5, bodyTension: 4, mentalNoise: 6 });
 
-    // If session already exists for this practiceId, do NOT call startSession again
-    // (this is the fix — before it would overwrite)
+    // Calling startSession again for the SAME practiceId would wipe before scores
+    // So we verify: if we DID accidentally call it again, before would be lost
+    startSession('box-breathing', 'focus');
+    const overwritten = usePracticeStore.getState().currentSession;
+    expect(overwritten!.before).toBeUndefined(); // proves the guard is necessary
+
+    // Now test the correct path: start, set scores, and DON'T call startSession again
+    usePracticeStore.setState({ sessions: [], currentSession: null });
+    startSession('box-breathing', 'focus');
+    usePracticeStore.getState().setBeforeScores({ stress: 5, bodyTension: 4, mentalNoise: 6 });
+
+    // Guard check: session exists for this practiceId → do not restart
+    const guarded = usePracticeStore.getState().currentSession;
+    if (guarded && guarded.practiceId === 'box-breathing') {
+      // This is what PracticeSessionScreen does — skip startSession
+    }
+    expect(usePracticeStore.getState().currentSession!.before).toEqual({
+      stress: 5, bodyTension: 4, mentalNoise: 6,
+    });
   });
 
   it('reliefDelta is calculated correctly after feedback', () => {
@@ -96,5 +113,62 @@ describe('practiceStore - session lifecycle', () => {
     const completed = usePracticeStore.getState().sessions[0];
     expect(completed.reliefDelta).toBeUndefined();
     expect(completed.after).toEqual({ stress: 3, bodyTension: 2, mentalNoise: 3 });
+  });
+});
+
+
+describe('PracticeSessionScreen guard — does not restart session', () => {
+  beforeEach(() => {
+    usePracticeStore.setState({ sessions: [], currentSession: null });
+  });
+
+  it('simulates the screen guard: skips startSession when currentSession.practiceId matches', () => {
+    const { startSession, setBeforeScores } = usePracticeStore.getState();
+
+    // Step 1: BeforeCheckIn flow already started a session and set scores
+    startSession('long-exhale-reset', 'anxiety');
+    setBeforeScores({ stress: 8, bodyTension: 7, mentalNoise: 9 });
+
+    // Step 2: PracticeSessionScreen mounts — it checks the guard
+    const practiceId = 'long-exhale-reset';
+    const currentSession = usePracticeStore.getState().currentSession;
+
+    // This is the exact guard from PracticeSessionScreen:
+    // if (!currentSession || currentSession.practiceId !== practice.id) { startSession(...) }
+    const shouldStart = !currentSession || currentSession.practiceId !== practiceId;
+    expect(shouldStart).toBe(false); // guard prevents restart
+
+    // before scores are still intact
+    expect(usePracticeStore.getState().currentSession!.before).toEqual({
+      stress: 8, bodyTension: 7, mentalNoise: 9,
+    });
+  });
+
+  it('starts a new session when practiceId does not match', () => {
+    const { startSession, setBeforeScores } = usePracticeStore.getState();
+
+    // Session already exists for a different practice
+    startSession('box-breathing', 'focus');
+    setBeforeScores({ stress: 5, bodyTension: 4, mentalNoise: 6 });
+
+    // Navigate to a different practice
+    const practiceId = 'cyclic-sigh';
+    const currentSession = usePracticeStore.getState().currentSession;
+
+    const shouldStart = !currentSession || currentSession.practiceId !== practiceId;
+    expect(shouldStart).toBe(true); // different practice, must start new session
+
+    // Start the new session (as PracticeSessionScreen would)
+    startSession(practiceId, 'anger');
+    expect(usePracticeStore.getState().currentSession!.practiceId).toBe('cyclic-sigh');
+    expect(usePracticeStore.getState().currentSession!.before).toBeUndefined();
+  });
+
+  it('starts a new session when no currentSession exists', () => {
+    const practiceId = 'feet-on-floor';
+    const currentSession = usePracticeStore.getState().currentSession;
+
+    const shouldStart = !currentSession || currentSession.practiceId !== practiceId;
+    expect(shouldStart).toBe(true);
   });
 });

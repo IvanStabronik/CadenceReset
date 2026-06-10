@@ -77,15 +77,8 @@ describe('Practice Library Integrity', () => {
 
   it('contains all expected canonical practice IDs', () => {
     const actualIds = practices.map(p => p.id).sort();
-    const missing = EXPECTED_IDS.filter(id => !actualIds.includes(id));
-    if (missing.length > 0) {
-      console.warn('Missing practices:', missing);
-    }
-    // At minimum, all MVP practices must exist
-    const mvpIds = EXPECTED_IDS.slice(0, 12);
-    for (const id of mvpIds) {
-      expect(actualIds).toContain(id);
-    }
+    const expectedSorted = [...EXPECTED_IDS].sort();
+    expect(actualIds).toEqual(expectedSorted);
   });
 
   it('breathing practices with breathPattern have valid pattern', () => {
