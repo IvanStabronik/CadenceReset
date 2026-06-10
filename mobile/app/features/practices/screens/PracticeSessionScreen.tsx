@@ -78,9 +78,9 @@ export default function PracticeSessionScreen() {
     };
   }, [isStarted, isPaused, currentStepIndex, useBreathMode]);
 
-  // Auto-advance when timer hits 0
+  // Auto-advance when timer hits 0 — only for step mode
   useEffect(() => {
-    if (timeRemaining === 0 && isStarted && !isPaused) {
+    if (timeRemaining === 0 && isStarted && !isPaused && !useBreathMode) {
       handleNext();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -154,10 +154,12 @@ export default function PracticeSessionScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Progress bar */}
-      <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
-      </View>
+      {/* Progress bar — hidden in breath mode (BreathingSessionView has its own cycle indicator) */}
+      {!useBreathMode && (
+        <View style={styles.progressBarContainer}>
+          <View style={[styles.progressBar, { width: `${progress * 100}%` }]} />
+        </View>
+      )}
 
       {/* Paused overlay */}
       {isPaused && (

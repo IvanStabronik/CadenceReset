@@ -94,9 +94,10 @@ export default function BreathingSessionView({ breathPattern, onComplete, paused
       return;
     }
 
-    // Resume or start: use current countdown as the remaining time
-    const startRemaining = countdown > 0 ? countdown : phaseDuration;
+    // Resume: use remainingRef (preserved from pause) as the starting point
+    const startRemaining = remainingRef.current > 0 ? remainingRef.current : phaseDuration;
     remainingRef.current = startRemaining;
+    setCountdown(startRemaining);
 
     if (startRemaining === 0) {
       advancePhase();
@@ -118,13 +119,17 @@ export default function BreathingSessionView({ breathPattern, onComplete, paused
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paused, phaseIndex, currentCycle]);
 
-  // Reset countdown when phase changes (only when not paused)
+  // Reset countdown only when phase/cycle actually changes (not on pause toggle)
+  const prevPhaseRef = useRef(phaseIndex);
+  const prevCycleRef = useRef(currentCycle);
   useEffect(() => {
-    if (!paused) {
+    if (prevPhaseRef.current !== phaseIndex || prevCycleRef.current !== currentCycle) {
+      prevPhaseRef.current = phaseIndex;
+      prevCycleRef.current = currentCycle;
       setCountdown(phaseDuration);
       remainingRef.current = phaseDuration;
     }
-  }, [phaseIndex, currentCycle, phaseDuration, paused]);
+  }, [phaseIndex, currentCycle, phaseDuration]);
 
   const circleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
