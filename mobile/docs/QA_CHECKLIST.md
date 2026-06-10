@@ -52,8 +52,9 @@
 - [ ] Favorites persist across app restart
 
 ## Favorites
-- [ ] Toggle favorite works on result screen or detail screen
-- [ ] Favorite state persists locally
+- [ ] Store supports favoritePracticeIds
+- [ ] Favorite UI is not implemented yet
+- [ ] TODO: add favorite button on PracticeDetail or Result screen
 
 ## Safety / Copy
 - [ ] No medical/therapy claims in UI copy

@@ -75,12 +75,12 @@ const RECOMMENDATION_REASONS: Partial<Record<UserState, Record<string, string>>>
   },
   anger: {
     'cyclic-sigh': 'Double inhale, long exhale to discharge activation.',
-    'anger-cooling': 'Gives anger a safe physical channel.',
+    'anger-cooling': 'Gives anger a physical outlet without acting on it.',
     'jaw-shoulders-release': 'Releases tension from clenching.',
   },
   numb: {
     'feet-on-floor': 'Physical contact brings attention back to the body.',
-    'room-orientation': 'Visual engagement counters dissociation.',
+    'room-orientation': 'Visual engagement brings attention back to the room.',
     'five-four-three-two-one-grounding': 'Senses reconnect you to the present.',
   },
   sleep: {
@@ -101,7 +101,7 @@ const RECOMMENDATION_REASONS: Partial<Record<UserState, Record<string, string>>>
   workStress: {
     'before-meeting-reset': 'Quick reset between meetings or tasks.',
     'desk-body-release': 'Releases sitting tension without leaving the desk.',
-    'long-exhale-reset': 'Calms the body after sustained pressure.',
+    'long-exhale-reset': 'May help the body settle after sustained pressure.',
   },
   sadness: {
     'sadness-grounding': 'Be with sadness without drowning in it.',
@@ -124,7 +124,7 @@ const RECOMMENDATION_REASONS: Partial<Record<UserState, Record<string, string>>>
     'jaw-shoulders-release': 'Quick tension release for common holding areas.',
   },
   panicLite: {
-    'five-four-three-two-one-grounding': 'Grounds through all senses to interrupt panic.',
+    'five-four-three-two-one-grounding': 'Grounds through the senses when activation feels high.',
     'feet-on-floor': 'Simple body contact to anchor attention.',
     'room-orientation': 'Slow looking around interrupts narrowed vision.',
   },
