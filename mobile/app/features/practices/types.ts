@@ -13,6 +13,14 @@ export type UserState =
   | 'anger' | 'numb' | 'sleep' | 'focus' | 'burnout'
   | 'workStress' | 'sadness' | 'shame' | 'lowEnergy' | 'quickReset';
 
+export type BreathPattern = {
+  inhaleSec: number;
+  exhaleSec: number;
+  holdAfterInhaleSec?: number;
+  holdAfterExhaleSec?: number;
+  cycles: number;
+};
+
 export type PracticeStep = {
   id: string;
   title?: string;
@@ -39,6 +47,7 @@ export type Practice = {
   beforePrompt: string;
   afterPrompt: string;
   fallbackPracticeId?: string;
+  breathPattern?: BreathPattern;
   steps: PracticeStep[];
   isPremium?: boolean;
   pack: 'mvp' | 'workday' | 'emotional' | 'sleep' | 'burnout';

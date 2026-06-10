@@ -37,7 +37,7 @@ export default function PracticeDetailScreen() {
   }
 
   const handleStart = () => {
-    navigation.navigate('PracticeSession', { practiceId: practice.id });
+    navigation.navigate('PracticeBeforeCheckIn', { practiceId: practice.id, userState: route.params.userState });
   };
 
   return (
