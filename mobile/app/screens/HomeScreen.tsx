@@ -124,6 +124,24 @@ export default function HomeScreen() {
             <Text style={styles.buttonText}>Begin Reset</Text>
           )}
         </TouchableOpacity>
+
+        <View style={styles.practiceLinks}>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => navigation.navigate('StateCheckIn')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.secondaryButtonText}>What do you need?</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={() => navigation.navigate('PracticeLibrary')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.secondaryButtonText}>Browse Practices</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -199,5 +217,25 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  practiceLinks: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 16,
+    gap: 12,
+  },
+  secondaryButton: {
+    flex: 1,
+    backgroundColor: '#0d1510',
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#1a2b1e',
+  },
+  secondaryButtonText: {
+    color: '#8fae93',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

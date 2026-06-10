@@ -411,7 +411,7 @@ Full-stack implementation of the Cadence recommendation engine. Backend (Tasks 0
     - Use React Native Testing Library with mocked stores and navigation
     - _Requirements: 7.1–7.7, 10.1–10.6_
 
-- [ ] 18. Final full-stack checkpoint
+- [x] 18. Final full-stack checkpoint
   - Ensure backend compiles without errors and all backend tests pass (unit + property + integration)
   - Ensure mobile app compiles without errors on both iOS and Android (`npx expo start`)
   - Ensure all frontend tests pass (property tests Properties 9–12, unit tests, component tests)
