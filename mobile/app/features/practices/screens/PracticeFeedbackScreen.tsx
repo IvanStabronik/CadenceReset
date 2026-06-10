@@ -91,6 +91,7 @@ export default function PracticeFeedbackScreen() {
   const { practiceId } = route.params;
 
   const completeSession = usePracticeStore((s) => s.completeSession);
+  const completeWithoutFeedback = usePracticeStore((s) => s.completeWithoutFeedback);
 
   const [stress, setStress] = useState(5);
   const [bodyTension, setBodyTension] = useState(5);
@@ -110,6 +111,7 @@ export default function PracticeFeedbackScreen() {
   };
 
   const handleSkip = () => {
+    completeWithoutFeedback();
     navigation.popToTop();
   };
 

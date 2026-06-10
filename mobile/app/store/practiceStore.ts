@@ -7,6 +7,7 @@ interface PracticeStoreState {
   startSession: (practiceId: string, userState?: UserState) => void;
   setBeforeScores: (scores: CheckInScores) => void;
   completeSession: (after: CheckInScores, shift: 'better' | 'same' | 'worse', wouldUseAgain: 'yes' | 'maybe' | 'no') => void;
+  completeWithoutFeedback: () => void;
   abandonSession: () => void;
   resetCurrentSession: () => void;
 }
@@ -70,6 +71,21 @@ export const usePracticeStore = create<PracticeStoreState>((set, get) => ({
         currentSession: null,
       }));
     }
+  },
+
+  completeWithoutFeedback: () => {
+    const current = get().currentSession;
+    if (!current) return;
+    const completed: PracticeSession = {
+      ...current,
+      completedAt: new Date().toISOString(),
+      completed: true,
+      feedbackSkipped: true,
+    };
+    set((state) => ({
+      sessions: [...state.sessions, completed],
+      currentSession: null,
+    }));
   },
 
   resetCurrentSession: () => set({ currentSession: null }),

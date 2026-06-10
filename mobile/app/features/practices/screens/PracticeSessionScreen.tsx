@@ -13,6 +13,7 @@ import { getPracticeById } from '../practiceLibrary';
 import { usePracticeStore } from '../../../store/practiceStore';
 import { analytics } from '../../../services/analytics';
 import PracticeStepView from '../components/PracticeStepView';
+import BreathingSessionView from '../components/BreathingSessionView';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'PracticeSession'>;
@@ -21,9 +22,10 @@ type ScreenRouteProp = RouteProp<RootStackParamList, 'PracticeSession'>;
 export default function PracticeSessionScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<ScreenRouteProp>();
-  const { practiceId } = route.params;
+  const { practiceId, userState } = route.params;
   const practice = getPracticeById(practiceId);
 
+  const currentSession = usePracticeStore((s) => s.currentSession);
   const startSession = usePracticeStore((s) => s.startSession);
   const abandonSession = usePracticeStore((s) => s.abandonSession);
 
@@ -31,6 +33,7 @@ export default function PracticeSessionScreen() {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
+  const [useBreathMode, setUseBreathMode] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const steps = practice?.steps ?? [];
@@ -38,12 +41,20 @@ export default function PracticeSessionScreen() {
   const totalSteps = steps.length;
   const progress = totalSteps > 0 ? (currentStepIndex + 1) / totalSteps : 0;
 
-  // Start session on mount
+  // Start session on mount — only if not already started for this practice
   useEffect(() => {
     if (practice) {
-      startSession(practice.id);
-      analytics.practiceStarted(practice.id);
-      setTimeRemaining(steps[0]?.durationSec ?? 0);
+      if (!currentSession || currentSession.practiceId !== practice.id) {
+        startSession(practice.id, userState);
+      }
+      analytics.practiceStarted(practice.id, userState);
+
+      // Decide mode: breath pattern or step-by-step
+      if (practice.breathPattern) {
+        setUseBreathMode(true);
+      } else {
+        setTimeRemaining(steps[0]?.durationSec ?? 0);
+      }
       setIsStarted(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -89,7 +100,7 @@ export default function PracticeSessionScreen() {
     } else {
       // Practice complete
       analytics.practiceCompleted(practice.id);
-      navigation.replace('PracticeFeedback', { practiceId: practice.id });
+      navigation.replace('PracticeFeedback', { practiceId: practice.id, userState });
     }
   }, [currentStepIndex, totalSteps, steps, practice, navigation, currentStep]);
 
@@ -159,7 +170,16 @@ export default function PracticeSessionScreen() {
       )}
 
       {/* Step content */}
-      {!isPaused && (
+      {!isPaused && useBreathMode && practice.breathPattern && (
+        <BreathingSessionView
+          breathPattern={practice.breathPattern}
+          onComplete={() => {
+            analytics.practiceCompleted(practice.id);
+            navigation.replace('PracticeFeedback', { practiceId: practice.id, userState });
+          }}
+        />
+      )}
+      {!isPaused && !useBreathMode && (
         <PracticeStepView step={currentStep} timeRemaining={timeRemaining} />
       )}
 

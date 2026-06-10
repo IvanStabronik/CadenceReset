@@ -69,5 +69,6 @@ export type PracticeSession = {
   after?: CheckInScores;
   reliefDelta?: CheckInScores;
   feedbackShift?: 'better' | 'same' | 'worse';
+  feedbackSkipped?: boolean;
   wouldUseAgain?: 'yes' | 'maybe' | 'no';
 };
