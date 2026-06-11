@@ -14,6 +14,7 @@ import { usePracticeStore } from '../../../store/practiceStore';
 import { analytics } from '../../../services/analytics';
 import PracticeStepView from '../components/PracticeStepView';
 import BreathingSessionView from '../components/BreathingSessionView';
+import { useVoiceGuidance } from '../hooks/useVoiceGuidance';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'PracticeSession'>;
@@ -28,6 +29,8 @@ export default function PracticeSessionScreen() {
   const currentSession = usePracticeStore((s) => s.currentSession);
   const startSession = usePracticeStore((s) => s.startSession);
   const abandonSession = usePracticeStore((s) => s.abandonSession);
+  const voiceGuidanceEnabled = usePracticeStore((s) => s.voiceGuidanceEnabled);
+  const setVoiceGuidanceEnabled = usePracticeStore((s) => s.setVoiceGuidanceEnabled);
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -40,6 +43,15 @@ export default function PracticeSessionScreen() {
   const currentStep = steps[currentStepIndex];
   const totalSteps = steps.length;
   const progress = totalSteps > 0 ? (currentStepIndex + 1) / totalSteps : 0;
+
+  // Voice guidance for step mode
+  const voiceText = !useBreathMode ? (currentStep?.voiceCue || currentStep?.instruction) : undefined;
+  useVoiceGuidance({
+    enabled: voiceGuidanceEnabled && !useBreathMode && isStarted,
+    text: voiceText,
+    paused: isPaused,
+    delaySec: currentStep?.voiceDelaySec,
+  });
 
   // Start session on mount — only if not already started for this practice
   useEffect(() => {
@@ -149,9 +161,20 @@ export default function PracticeSessionScreen() {
         <Text style={styles.stepIndicator}>
           {useBreathMode ? 'Breathing' : `${currentStepIndex + 1} / ${totalSteps}`}
         </Text>
-        <TouchableOpacity onPress={handlePauseResume} accessibilityRole="button" accessibilityLabel={isPaused ? 'Resume' : 'Pause'}>
-          <Text style={styles.pauseText}>{isPaused ? '▶' : '⏸'}</Text>
-        </TouchableOpacity>
+        <View style={styles.topBarRight}>
+          <TouchableOpacity
+            onPress={() => setVoiceGuidanceEnabled(!voiceGuidanceEnabled)}
+            accessibilityRole="button"
+            accessibilityLabel={voiceGuidanceEnabled ? 'Disable voice' : 'Enable voice'}
+          >
+            <Text style={[styles.voiceToggle, !voiceGuidanceEnabled && styles.voiceToggleOff]}>
+              {voiceGuidanceEnabled ? '🔊' : '🔇'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handlePauseResume} accessibilityRole="button" accessibilityLabel={isPaused ? 'Resume' : 'Pause'}>
+            <Text style={styles.pauseText}>{isPaused ? '▶' : '⏸'}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Progress bar — hidden in breath mode (BreathingSessionView has its own cycle indicator) */}
@@ -176,6 +199,7 @@ export default function PracticeSessionScreen() {
         <BreathingSessionView
           breathPattern={practice.breathPattern}
           paused={isPaused}
+          voiceEnabled={voiceGuidanceEnabled}
           onComplete={() => {
             analytics.practiceCompleted(practice.id);
             navigation.replace('PracticeFeedback', { practiceId: practice.id, userState });
@@ -242,6 +266,17 @@ const styles = StyleSheet.create({
   pauseText: {
     color: '#8a9b8e',
     fontSize: 18,
+  },
+  topBarRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  voiceToggle: {
+    fontSize: 16,
+  },
+  voiceToggleOff: {
+    opacity: 0.5,
   },
   progressBarContainer: {
     height: 3,

@@ -36,6 +36,7 @@ interface PracticeStoreState {
   sessions: PracticeSession[];
   currentSession: PracticeSession | null;
   favoritePracticeIds: string[];
+  voiceGuidanceEnabled: boolean;
   startSession: (practiceId: string, userState?: UserState) => void;
   setBeforeScores: (scores: CheckInScores) => void;
   completeSession: (after: CheckInScores, shift: 'better' | 'same' | 'worse', wouldUseAgain: 'yes' | 'maybe' | 'no') => void;
@@ -43,6 +44,7 @@ interface PracticeStoreState {
   abandonSession: () => void;
   resetCurrentSession: () => void;
   toggleFavorite: (practiceId: string) => void;
+  setVoiceGuidanceEnabled: (enabled: boolean) => void;
   getRecentSessions: (count?: number) => PracticeSession[];
   getCompletedSessions: () => PracticeSession[];
   getLatestCompletedSession: () => PracticeSession | undefined;
@@ -54,6 +56,7 @@ export const usePracticeStore = create<PracticeStoreState>()(
       sessions: [],
       currentSession: null,
       favoritePracticeIds: [],
+      voiceGuidanceEnabled: true,
 
       startSession: (practiceId, userState) => {
         set({
@@ -139,6 +142,10 @@ export const usePracticeStore = create<PracticeStoreState>()(
         });
       },
 
+      setVoiceGuidanceEnabled: (enabled) => {
+        set({ voiceGuidanceEnabled: enabled });
+      },
+
       getRecentSessions: (count = 5) => {
         const { sessions } = get();
         return [...sessions].reverse().slice(0, count);
@@ -162,6 +169,7 @@ export const usePracticeStore = create<PracticeStoreState>()(
       partialize: (state) => ({
         sessions: state.sessions,
         favoritePracticeIds: state.favoritePracticeIds,
+        voiceGuidanceEnabled: state.voiceGuidanceEnabled,
       }),
     },
   ),

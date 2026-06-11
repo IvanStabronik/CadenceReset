@@ -60,3 +60,16 @@
 - [ ] No medical/therapy claims in UI copy
 - [ ] No "you are safe", "healed", "scientifically proven"
 - [ ] Tone is calm, practical, minimal
+
+## Voice Guidance
+- [ ] Voice toggle (🔊/🔇) visible in practice session top bar
+- [ ] Toggling voice stops/starts speech immediately
+- [ ] Step practices: speaks voiceCue or instruction on step start
+- [ ] Speech stops on pause
+- [ ] Speech stops on exit
+- [ ] Speech stops on practice completion
+- [ ] Breath mode: announces phase label for first 3 cycles only
+- [ ] Breath mode: does NOT speak countdown numbers
+- [ ] Voice setting persists across sessions
+- [ ] Voice cues are short and calm
+- [ ] No unsafe language in voice cues

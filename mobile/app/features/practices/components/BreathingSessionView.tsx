@@ -7,11 +7,13 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { BreathPattern } from '../types';
+import { useBreathVoiceGuidance } from '../hooks/useVoiceGuidance';
 
 interface BreathingSessionViewProps {
   breathPattern: BreathPattern;
   onComplete: () => void;
   paused?: boolean;
+  voiceEnabled?: boolean;
 }
 
 type BreathPhase = 'inhale' | 'holdIn' | 'exhale' | 'holdOut';
@@ -42,7 +44,7 @@ function getPhaseSequence(pattern: BreathPattern): BreathPhase[] {
   return seq;
 }
 
-export default function BreathingSessionView({ breathPattern, onComplete, paused = false }: BreathingSessionViewProps) {
+export default function BreathingSessionView({ breathPattern, onComplete, paused = false, voiceEnabled = false }: BreathingSessionViewProps) {
   const [currentCycle, setCurrentCycle] = useState(1);
   const [phaseIndex, setPhaseIndex] = useState(0);
   const [countdown, setCountdown] = useState(0);
@@ -53,6 +55,15 @@ export default function BreathingSessionView({ breathPattern, onComplete, paused
   const phases = getPhaseSequence(breathPattern);
   const currentPhase = phases[phaseIndex];
   const phaseDuration = getPhaseDuration(currentPhase, breathPattern);
+
+  // Voice cue for breath phases (first 3 cycles only)
+  useBreathVoiceGuidance({
+    enabled: voiceEnabled,
+    phaseLabel: getPhaseLabel(currentPhase),
+    cycle: currentCycle,
+    paused: paused,
+    maxVoiceCycles: 3,
+  });
 
   const advancePhase = useCallback(() => {
     const nextPhaseIndex = phaseIndex + 1;

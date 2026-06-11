@@ -14,3 +14,11 @@ jest.mock('react-native-reanimated', () => ({
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
+
+jest.mock('expo-speech', () => ({
+  speak: jest.fn(),
+  stop: jest.fn(),
+  pause: jest.fn(),
+  resume: jest.fn(),
+  isSpeakingAsync: jest.fn().mockResolvedValue(false),
+}));

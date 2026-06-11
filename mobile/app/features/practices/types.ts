@@ -29,6 +29,8 @@ export type PracticeStep = {
   durationSec: number;
   phase?: PracticePhase;
   haptic?: boolean;
+  voiceCue?: string;
+  voiceDelaySec?: number;
 };
 
 export type Practice = {
