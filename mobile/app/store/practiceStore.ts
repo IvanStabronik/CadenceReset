@@ -1,7 +1,36 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import { PracticeSession, CheckInScores, UserState } from '../features/practices/types';
+
+// Safe AsyncStorage wrapper - falls back to in-memory if native module unavailable
+let storageEngine: StateStorage;
+try {
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  if (AsyncStorage) {
+    storageEngine = {
+      getItem: async (name: string) => {
+        try { return await AsyncStorage.getItem(name); } catch { return null; }
+      },
+      setItem: async (name: string, value: string) => {
+        try { await AsyncStorage.setItem(name, value); } catch {}
+      },
+      removeItem: async (name: string) => {
+        try { await AsyncStorage.removeItem(name); } catch {}
+      },
+    };
+  } else {
+    throw new Error('AsyncStorage native module is null');
+  }
+} catch {
+  // Fallback: in-memory storage (data won't persist across restarts but app won't crash)
+  const memoryStore = new Map<string, string>();
+  storageEngine = {
+    getItem: async (name: string) => memoryStore.get(name) ?? null,
+    setItem: async (name: string, value: string) => { memoryStore.set(name, value); },
+    removeItem: async (name: string) => { memoryStore.delete(name); },
+  };
+  console.warn('[practiceStore] AsyncStorage unavailable, using in-memory fallback');
+}
 
 interface PracticeStoreState {
   sessions: PracticeSession[];
@@ -129,11 +158,10 @@ export const usePracticeStore = create<PracticeStoreState>()(
     }),
     {
       name: 'cadence-practice-store',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => storageEngine),
       partialize: (state) => ({
         sessions: state.sessions,
         favoritePracticeIds: state.favoritePracticeIds,
-        // Do not persist currentSession — it's transient
       }),
     },
   ),

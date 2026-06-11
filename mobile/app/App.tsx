@@ -2,37 +2,36 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import RootNavigator from './navigation/RootNavigator';
-import { useAuthStore } from './store/useAuthStore';
-import { restoreSession, signInAnonymously } from './services/auth';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   useEffect(() => {
-    async function initAuth() {
+    // Show app after max 2s, auth is non-blocking
+    const timeout = setTimeout(() => setIsLoading(false), 2000);
+
+    (async () => {
       try {
+        const { restoreSession, signInAnonymously } = await import('./services/auth');
         const restored = await restoreSession();
         if (!restored) {
           await signInAnonymously();
         }
-      } catch (error) {
-        console.warn('Auth initialization failed:', error);
-        // Continue anyway — user can still see the UI
+      } catch (e) {
+        console.warn('Auth init failed, continuing without auth:', e);
       } finally {
+        clearTimeout(timeout);
         setIsLoading(false);
       }
-    }
+    })();
 
-    // Timeout: if auth takes more than 5s, show app anyway
-    const timeout = setTimeout(() => setIsLoading(false), 5000);
-    initAuth().finally(() => clearTimeout(timeout));
+    return () => clearTimeout(timeout);
   }, []);
 
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#4a90d9" />
+        <ActivityIndicator size="large" color="#8fae93" />
       </View>
     );
   }
@@ -49,6 +48,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#050706',
   },
 });
