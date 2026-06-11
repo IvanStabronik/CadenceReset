@@ -73,3 +73,4 @@
 - [ ] Voice setting persists across sessions
 - [ ] Voice cues are short and calm
 - [ ] No unsafe language in voice cues
+- [ ] NOTE: iOS physical devices may not play speech in silent mode (hardware switch)
