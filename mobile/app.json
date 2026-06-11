@@ -1,14 +1,13 @@
 {
   "expo": {
-    "name": "Cadence Reset",
-    "slug": "cadence-reset",
+    "name": "mobile",
+    "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.ianstabronik.cadencereset"
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +17,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.ianstabronik.cadencereset"
+      "package": "com.ianstabronik.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
